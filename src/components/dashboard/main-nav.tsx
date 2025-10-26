@@ -98,14 +98,14 @@ export function MainNav({ className, isMobile = false }: { className?: string; i
     >
       {/* Header: logo image only (no text/title) */}
       <div
-        className="flex items-center justify-center h-16 border-b"
+        className="flex items-center justify-center h-16 border-b px-4"
         style={{
           borderBottom: "1px solid hsl(var(--sidebar-border))",
           background: "hsl(var(--sidebar-header))",
         }}
       >
         <Link href="/dashboard" aria-label="Go to dashboard">
-          <Logo className="h-8 w-auto" />
+          <Logo className="h-10 w-auto" />
         </Link>
       </div>
 
