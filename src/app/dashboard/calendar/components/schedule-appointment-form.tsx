@@ -8,7 +8,7 @@ import * as z from "zod";
 import { format, setHours, setMinutes } from "date-fns";
 import { useFirestore } from "@/firebase";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { collection } from "firebase/firestore";
+import { collection, serverTimestamp } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +39,7 @@ import {
 import { PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   title: z
@@ -79,6 +80,7 @@ export function ScheduleAppointmentForm({
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -126,6 +128,22 @@ export function ScheduleAppointmentForm({
         userId: values.userId,
         startTime: startTime,
         endTime: endTime,
+    }).then(docRef => {
+        // Log activity after successful creation
+        if (docRef) {
+            addDocumentNonBlocking(collection(firestore, "activities"), {
+                type: 'appointment:create',
+                message: `Appointment "${values.title}" scheduled.`,
+                actorId: user?.id,
+                actorName: user?.name,
+                meta: {
+                    appointmentId: docRef.id,
+                    clientId: values.clientId,
+                    userId: values.userId,
+                },
+                timestamp: serverTimestamp(),
+            });
+        }
     });
 
     toast({

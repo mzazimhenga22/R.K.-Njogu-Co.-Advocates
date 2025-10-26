@@ -11,8 +11,7 @@ import {
   collection,
   query,
   where,
-  Query,
-  DocumentData,
+  serverTimestamp,
 } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
@@ -45,6 +44,7 @@ import { PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { type Client } from "../../clients/page";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   fileName: z.string().min(3, { message: "Title must be at least 3 characters." }),
@@ -65,6 +65,7 @@ export function CreateFileForm() {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { user } = useAuth();
 
   const clientsQuery = React.useMemo(
     () => (firestore ? collection(firestore, "clients") : null),
@@ -97,7 +98,7 @@ export function CreateFileForm() {
 
     try {
       const filesCollection = collection(firestore, "files");
-      await addDoc(filesCollection, {
+      const fileRef = await addDoc(filesCollection, {
         fileName: values.fileName,
         fileDescription: values.fileDescription,
         clientId: values.clientId,
@@ -105,6 +106,24 @@ export function CreateFileForm() {
         status: values.status,
         openingDate: new Date().toISOString(),
       });
+      
+      // Log activity
+      try {
+        await addDoc(collection(firestore, "activities"), {
+          type: "file:create",
+          message: `New file "${values.fileName}" was created.`,
+          actorId: user?.id,
+          actorName: user?.name,
+          fileId: fileRef.id,
+          meta: {
+            clientId: values.clientId,
+            assignedLawyerId: values.assignedLawyerId,
+          },
+          timestamp: serverTimestamp(),
+        });
+      } catch (err) {
+        console.warn("Failed to log file creation activity:", err);
+      }
 
       toast({
         title: "File created",
@@ -262,5 +281,3 @@ export function CreateFileForm() {
     </Dialog>
   );
 }
-
-    

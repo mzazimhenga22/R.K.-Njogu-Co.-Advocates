@@ -251,6 +251,48 @@
         "amountPaid",
         "paymentDate"
       ]
+    },
+    "Activity": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Activity",
+      "type": "object",
+      "description": "Represents a log entry for a user action within the application.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of action performed, e.g., 'client:create', 'file:update'."
+        },
+        "message": {
+          "type": "string",
+          "description": "A human-readable summary of the activity."
+        },
+        "description": {
+          "type": "string",
+          "description": "A more detailed description of the activity."
+        },
+        "actorId": {
+          "type": "string",
+          "description": "The ID of the user who performed the action."
+        },
+        "actorName": {
+          "type": "string",
+          "description": "The name of the user who performed the action."
+        },
+        "fileId": {
+          "type": "string",
+          "description": "Reference to the associated file, if any."
+        },
+        "meta": {
+          "type": "object",
+          "description": "An object for storing additional context-specific data."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The server timestamp when the activity occurred."
+        }
+      },
+      "required": ["type", "message", "timestamp"]
     }
   },
   "auth": {
@@ -339,9 +381,17 @@
           },
           "description": "Stores receipt information for paid invoices."
         }
+      },
+      {
+        "path": "/activities/{activityId}",
+        "definition": {
+          "entityName": "Activity",
+          "schema": {
+            "$ref": "#/backend/entities/Activity"
+          },
+          "description": "Stores a log of user activities for the dashboard feed."
+        }
       }
     ]
   }
 }
-
-    

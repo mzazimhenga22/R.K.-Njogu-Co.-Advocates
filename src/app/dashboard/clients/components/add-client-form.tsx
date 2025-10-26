@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -28,6 +29,7 @@ import { PlusCircle } from "lucide-react";
 import { useFirestore } from "@/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters." }),
@@ -40,6 +42,7 @@ const formSchema = z.object({
 export function AddClientForm() {
   const [open, setOpen] = React.useState(false);
   const firestore = useFirestore();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -63,9 +66,8 @@ export function AddClientForm() {
           type: "client:create",
           message: `Client "${values.firstName} ${values.lastName}" added.`,
           description: `Client created with email ${values.email}`,
-          actorId: null, // replace with current user's uid if you have auth
-          actorName: null, // replace with current user's name/email if available
-          caseId: null,
+          actorId: user?.id ?? null,
+          actorName: user?.name ?? "System",
           meta: { clientRefId: clientRef.id ?? null },
           timestamp: serverTimestamp(),
         });

@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { CaseStatusChart } from "./components/case-status-chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RecentActivity } from "./components/recent-activity";
@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { type Invoice } from "./invoices/page";
+import { type Invoice } from "@/types/invoice";
 import { type Client } from "./clients/page";
 import { type File as FileType } from "./files/page";
 import { type Appointment } from "./calendar/page";
@@ -91,7 +91,7 @@ export default function DashboardPage() {
   const activitiesQuery = useMemoFirebase(
     () =>
       firestore
-        ? query(collection(firestore, "activities"), orderBy("timestamp", "desc"), limit(25))
+        ? query(collection(firestore, "activities"), orderBy("timestamp", "desc"), limit(5))
         : null,
     [firestore]
   );
@@ -101,7 +101,7 @@ export default function DashboardPage() {
     invoicesLoading || clientsLoading || filesLoading || appointmentsLoading || activitiesLoading;
 
   const totalRevenue = React.useMemo(() => {
-    return invoices?.filter((i) => i.paymentStatus === "Paid").reduce((acc, i) => acc + i.amount, 0);
+    return invoices?.filter((i) => i.paymentStatus === "Paid").reduce((acc, i) => acc + (i.amount || 0), 0);
   }, [invoices]);
 
   const upcomingAppointments = React.useMemo(() => {
@@ -140,7 +140,6 @@ export default function DashboardPage() {
   }, [files]);
 
   // Build an array shaped exactly like the placeholder Activity type expects.
-  // We guarantee `description` is a string and `user` is a string (fallbacks).
   const recentActivities = React.useMemo(() => {
     if (!activitiesDocs) return [] as PlaceholderActivity[];
 
@@ -166,28 +165,15 @@ export default function DashboardPage() {
         date = Number.isNaN(parsed.getTime()) ? null : parsed;
       }
 
-      // Build fields with guaranteed types expected by RecentActivity
-      const id = doc.id ?? Math.random().toString(36).slice(2);
-      const type = doc.type ?? "activity";
-      const message = doc.message ?? (doc.type ? doc.type : "Activity");
-      const description = (doc.description ?? (typeof doc.message === "string" ? doc.message : "") ) as string;
-      const user = doc.actorName ?? "System"; // RecentActivity expects a user string
-      const fileId = doc.fileId ?? null;
-      const meta = doc.meta ?? null;
-      const timestamp = date;
-      const prettyTime = date ? format(date, "PPpp") : "Unknown";
+      const prettyTime = date ? formatDistanceToNow(date, { addSuffix: true }) : "just now";
+
 
       // Return an object matching PlaceholderActivity. We cast to the imported type to satisfy TS.
       return {
-        id,
-        type,
-        message,
-        description,
-        user,
-        caseId: fileId, // Keep caseId for compatibility with RecentActivity if needed, but points to fileId
-        meta,
-        timestamp,
-        prettyTime,
+        id: doc.id ?? Math.random().toString(36).slice(2),
+        description: doc.message ?? "An action was performed",
+        user: doc.actorName ?? "System", // RecentActivity expects a user string
+        timestamp: prettyTime,
       } as unknown as PlaceholderActivity;
     });
 
@@ -411,5 +397,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
