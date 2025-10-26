@@ -1,3 +1,4 @@
+
 // src/app/dashboard/receipts/[id]/page.tsx
 "use client";
 
@@ -20,6 +21,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type Client } from "../../clients/page";
 import { Logo } from "@/components/logo";
+import { type Invoice } from "@/types/invoice";
+
 
 const currency = (amount?: number) =>
   new Intl.NumberFormat(undefined, {
@@ -50,16 +53,6 @@ type FirmSettings = {
   footerText?: string;
   signatory?: string;
 };
-
-// ---- single Invoice type (use this throughout the file) ----
-type Invoice = {
-  items?: { description: string; ref?: string; amount: number }[];
-  amount?: number;
-  caseName?: string;
-  description?: string;
-  reference?: string;
-};
-// ------------------------------------------------------------
 
 export default function ReceiptDetailsPage() {
   const params = useParams();
@@ -278,20 +271,17 @@ export default function ReceiptDetailsPage() {
   const firmSignatory = firm?.signatory ?? "Kamau R. Njogu";
   const firmFooterText = firm?.footerText ?? "Thank you for choosing R. K. Njogu & Co. Advocates";
 
-  // itemsToRender and reference are computed below (invoice hook moved earlier)
   const itemsToRender =
     Array.isArray(invoice?.items) && invoice!.items!.length > 0
       ? invoice!.items!
       : invoice?.amount
-      ? [{ description: invoice.caseName ?? invoice.description ?? "Professional Fees", amount: invoice.amount, ref: invoice.reference }]
+      ? [{ description: invoice.fileName ?? invoice.description ?? "Professional Fees", amount: invoice.amount, ref: invoice.reference }]
       : [
-          { description: "File Registration Fees", amount: 5000 },
-          { description: "Drafting Fees for Sale Agreement, Spousal Consent and Transfer", amount: 15000 },
-          { description: "Instruction Fees to Lodge Transfer and LCB Consent", amount: 30000 },
-          { description: "Disbursements", amount: 10000 },
+          { description: "Payment towards outstanding balance", amount: receipt.amountPaid, ref: "" }
         ];
 
-  const reference = (receipt as any).reference ?? invoice?.reference ?? `Payment reference for invoice ${receipt.invoiceId ?? "—"}`;
+  const reference = receipt.reference ?? invoice?.reference ?? `Payment for Invoice ${receipt.invoiceId ?? "—"}`;
+
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto px-4">
@@ -332,14 +322,14 @@ export default function ReceiptDetailsPage() {
                 <div className="font-semibold">{clientName}</div>
                 <div className="text-sm text-muted-foreground whitespace-pre-line mt-2">{clientAddress}</div>
 
-                <div className="mt-4 text-sm text-muted-foreground mb-1">Reference</div>
+                <div className="mt-4 text-sm text-muted-foreground mb-1">Our Ref</div>
                 <div className="text-sm">{reference}</div>
               </div>
 
               {/* RIGHT: Official Receipt block */}
               <div className="md:w-1/3 text-right">
                 <div className="text-sm font-semibold">OFFICIAL RECEIPT</div>
-                <div className="text-xl font-bold mt-1">#{receipt.id}</div>
+                <div className="text-xl font-bold mt-1">#{receipt.id.substring(0,8).toUpperCase()}</div>
 
                 <div className="mt-2 text-sm text-muted-foreground">Date: <span className="font-medium">{paymentDateLabel}</span></div>
                 <div className="text-sm text-muted-foreground mt-1">Method: <span className="font-medium">{receipt.paymentMethod ?? "—"}</span></div>
@@ -361,7 +351,7 @@ export default function ReceiptDetailsPage() {
                 <thead>
                   <tr>
                     <th className="p-3 text-left font-semibold">#</th>
-                    <th className="p-3 text-left font-semibold">PARTICULARS OF SERVICES RENDERED</th>
+                    <th className="p-3 text-left font-semibold">PARTICULARS</th>
                     <th className="p-3 text-right font-semibold">AMOUNT (Kshs.)</th>
                   </tr>
                 </thead>

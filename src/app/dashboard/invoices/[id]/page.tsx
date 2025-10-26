@@ -21,24 +21,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Logo } from "@/components/logo";
-
-export type Invoice = {
-  id: string;
-  clientId: string;
-  clientName?: string | null;
-  fileId?: string | null;
-  fileName?: string | null;
-  amount?: number | null;
-  items?: { description: string; ref?: string; amount: number }[];
-  invoiceDate?: string;
-  dueDate?: string;
-  paymentStatus?: "Paid" | "Unpaid" | "Overdue";
-  description?: string | null;
-  note?: string | null;
-  reference?: string | null; // Our Ref
-  feeNoteNo?: string | null; // explicit Fee Note No (preferred)
-  feeSequence?: string | number | null;
-};
+import { type Invoice } from "@/types/invoice";
 
 type Client = {
   id: string;
@@ -62,12 +45,14 @@ const getStatusVariant = (status: string | undefined) => {
   switch (status) {
     case "Paid":
       return "default";
-    case "Unpaid":
+    case "Partially Paid":
       return "secondary";
+    case "Unpaid":
+      return "outline";
     case "Overdue":
       return "destructive";
     default:
-      return "default";
+      return "outline";
   }
 };
 
@@ -306,9 +291,10 @@ export default function InvoiceDetailsPage() {
       ? [{ description: invoice.fileName ?? invoice.description ?? "Professional Fees", amount: invoice.amount, ref: invoice.reference ?? undefined }]
       : sampleItems;
 
-  const subtotalAmount = computeSubtotal(itemsToRender);
-  const tax = +(subtotalAmount * 0.16).toFixed(2);
-  const total = +(subtotalAmount + tax).toFixed(2);
+  const totalAmount = computeSubtotal(itemsToRender);
+  const amountPaid = invoice.amountPaid || 0;
+  const balanceDue = totalAmount - amountPaid;
+
 
   const clientName =
     clientFromHook?.name ??
@@ -450,10 +436,10 @@ export default function InvoiceDetailsPage() {
 
             <div className="flex justify-end mt-2">
               <div className="w-full max-w-xs space-y-2">
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span>{currency(subtotalAmount)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">VAT (16%)</span><span>{currency(tax)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span>{currency(totalAmount)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Amount Paid</span><span>- {currency(amountPaid)}</span></div>
                 <Separator />
-                <div className="flex justify-between font-bold text-lg"><span>TOTAL</span><span>{currency(total)}</span></div>
+                <div className="flex justify-between font-bold text-lg"><span>Balance Due</span><span>{currency(balanceDue)}</span></div>
               </div>
             </div>
           </CardContent>

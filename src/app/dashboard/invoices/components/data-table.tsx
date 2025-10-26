@@ -1,8 +1,5 @@
 
 // Updated: src/app/dashboard/invoices/components/data-table.tsx
-// - No major structural changes here — kept UI the same.
-// - Import/usage unchanged; GenerateInvoiceForm remains the same component name.
-
 "use client";
 
 import * as React from "react";
@@ -18,6 +15,10 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,37 +38,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore } from "@/firebase";
 import {
   doc,
-  updateDoc,
-  addDoc,
   collection,
   serverTimestamp,
   runTransaction,
+  increment,
 } from "firebase/firestore";
 import { GenerateInvoiceForm } from "./generate-invoice-form";
 import { useRouter } from "next/navigation";
+import { type Invoice } from "@/types/invoice";
 
-export type Invoice = {
-  id: string;
-  clientId: string;
-  clientName?: string | null;
-  fileId?: string | null;
-  fileName?: string | null;
-  amount?: number | null;
-  invoiceDate?: string;
-  dueDate?: string;
-  paymentStatus?: "Paid" | "Unpaid" | "Overdue";
-  description?: string | null;
-  reference?: string | null;
-  items?: { description: string; ref?: string; amount: number }[];
-  // new fields
-  vendor?: string | null;
-  purchaser?: string | null;
-};
 
 type Client = {
   id: string;
@@ -86,8 +87,10 @@ const getStatusVariant = (status?: Invoice["paymentStatus"]) => {
   switch (status) {
     case "Paid":
       return "default";
-    case "Unpaid":
+    case "Partially Paid":
       return "secondary";
+    case "Unpaid":
+      return "outline";
     case "Overdue":
       return "destructive";
     default:
@@ -100,102 +103,161 @@ const currency = (amount?: number) =>
 
 const fmtDate = (iso?: string | null) => (iso ? new Date(String(iso)).toLocaleDateString() : "-");
 
+const recordPaymentSchema = z.object({
+    amount: z.coerce.number().positive("Amount must be a positive number."),
+    paymentDate: z.string().min(1, "Payment date is required."),
+    paymentMethod: z.string().min(3, "Payment method is required.")
+});
+
+
+function RecordPaymentDialog({ invoice }: { invoice: Invoice }) {
+    const [open, setOpen] = React.useState(false);
+    const { toast } = useToast();
+    const firestore = useFirestore();
+    const router = useRouter();
+
+    const totalDue = (invoice.amount || 0);
+    const balance = invoice.balance ?? totalDue;
+
+    const form = useForm<z.infer<typeof recordPaymentSchema>>({
+        resolver: zodResolver(recordPaymentSchema),
+        defaultValues: {
+            amount: balance > 0 ? balance : 0,
+            paymentDate: new Date().toISOString().slice(0, 10),
+            paymentMethod: "Bank Transfer",
+        },
+    });
+
+    const handleRecordPayment = async (values: z.infer<typeof recordPaymentSchema>) => {
+        if (!firestore) {
+            toast({ variant: "destructive", title: "Database unavailable" });
+            return;
+        }
+
+        const invoiceRef = doc(firestore, "invoices", invoice.id);
+        
+        try {
+            const newReceiptId = await runTransaction(firestore, async (tx) => {
+                const invSnap = await tx.get(invoiceRef);
+                if (!invSnap.exists()) {
+                    throw new Error("Invoice not found.");
+                }
+
+                const currentData = invSnap.data() as Invoice;
+                const currentAmountPaid = currentData.amountPaid || 0;
+                const newAmountPaid = currentAmountPaid + values.amount;
+                const totalAmount = currentData.amount || 0;
+                const newBalance = totalAmount - newAmountPaid;
+
+                let newStatus: Invoice['paymentStatus'] = "Partially Paid";
+                if (newBalance <= 0) {
+                    newStatus = "Paid";
+                }
+
+                tx.update(invoiceRef, { 
+                    paymentStatus: newStatus,
+                    amountPaid: newAmountPaid,
+                    balance: newBalance,
+                    lastPaymentAt: serverTimestamp(),
+                });
+
+                const newReceiptRef = doc(collection(firestore, "receipts"));
+                tx.set(newReceiptRef, {
+                    invoiceId: invoice.id,
+                    clientId: invoice.clientId,
+                    clientName: invoice.clientName,
+                    amountPaid: values.amount,
+                    paymentDate: new Date(values.paymentDate).toISOString(),
+                    paymentMethod: values.paymentMethod,
+                    reference: invoice.reference, // Include invoice reference
+                    createdAt: serverTimestamp(),
+                });
+
+                return newReceiptRef.id;
+            });
+            
+            toast({ title: "Payment Recorded", description: `Receipt created. Redirecting...` });
+            router.push(`/dashboard/receipts/${newReceiptId}`);
+
+        } catch (error: any) {
+            console.error("Payment transaction failed:", error);
+            toast({ variant: "destructive", title: "Payment Failed", description: error.message });
+        }
+
+        setOpen(false);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Record Payment</DropdownMenuItem>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Record Payment for Invoice</DialogTitle>
+                    <DialogDescription>
+                        For invoice <span className="font-mono font-medium">{invoice.id.substring(0,8)}</span>. Balance due is {currency(balance)}.
+                    </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleRecordPayment)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="amount"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Amount Paid</FormLabel>
+                                    <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="paymentDate"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Payment Date</FormLabel>
+                                    <FormControl><Input type="date" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="paymentMethod"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Payment Method</FormLabel>
+                                    <FormControl>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                                                <SelectItem value="M-Pesa">M-Pesa</SelectItem>
+                                                <SelectItem value="Cheque">Cheque</SelectItem>
+                                                <SelectItem value="Cash">Cash</SelectItem>
+                                                <SelectItem value="Other">Other</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <DialogFooter>
+                            <Button type="submit" disabled={form.formState.isSubmitting}>Record Payment</Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export function InvoiceDataTable({ data, clients, cases: files }: { data: Invoice[]; clients: Client[]; cases: FileData[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const { toast } = useToast();
-  const firestore = useFirestore();
-  const router = useRouter();
-
-  const computeAmount = (inv: Invoice) => {
-    if (Array.isArray(inv.items) && inv.items.length > 0) {
-      return inv.items.reduce((s, it) => s + (Number(it.amount) || 0), 0);
-    }
-    return Number(inv.amount || 0);
-  };
-
-  const handleMarkAsPaid = async (invoiceId: string) => {
-    if (!firestore) {
-      toast({ variant: "destructive", title: "Database unavailable", description: "Firestore not initialized." });
-      return;
-    }
-
-    const invoiceRef = doc(firestore, "invoices", invoiceId);
-
-    try {
-      const newReceiptId = await runTransaction(firestore, async (tx) => {
-        const invSnap = await tx.get(invoiceRef);
-        if (!invSnap.exists()) {
-          throw new Error("Invoice not found (maybe deleted).");
-        }
-
-        const invoiceData = invSnap.data() as any;
-        if (invoiceData.paymentStatus === "Paid") {
-          throw new Error("Invoice is already marked as Paid.");
-        }
-
-        tx.update(invoiceRef, { paymentStatus: "Paid", paidAt: serverTimestamp() });
-
-        const receiptsCol = collection(firestore, "receipts");
-        const newReceiptRef = doc(receiptsCol);
-        const amount = computeAmount({ ...invoiceData, id: invoiceId } as Invoice);
-
-        const receiptPayload = {
-          invoiceId,
-          clientId: invoiceData.clientId ?? null,
-          clientName: invoiceData.clientName ?? null,
-          amountPaid: amount,
-          paymentDate: new Date().toISOString(),
-          paymentMethod: "System Marked",
-          reference: invoiceData.reference ?? null,
-          description: invoiceData.description ?? null,
-          notes: null,
-          createdAt: serverTimestamp(),
-        };
-
-        tx.set(newReceiptRef, receiptPayload);
-
-        return newReceiptRef.id;
-      });
-
-      if (newReceiptId) {
-        toast({ title: "Invoice marked Paid", description: `Receipt created (${newReceiptId.substring(0,8)}...)` });
-        router.push(`/dashboard/receipts/${newReceiptId}`);
-      } else {
-        toast({ variant: "destructive", title: "Unexpected error", description: "Receipt was not created." });
-        console.warn("Transaction completed but no receipt id returned.");
-      }
-    } catch (err: any) {
-      console.error("Error in handleMarkAsPaid transaction:", err);
-      const msg = err?.message ?? String(err);
-
-      if (msg.toLowerCase().includes("permission") || msg.toLowerCase().includes("permission-denied")) {
-        toast({
-          variant: "destructive",
-          title: "Permission denied",
-          description: "Firestore rules prevented writing the receipt. Check Firestore rules and authentication.",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Could not mark paid",
-          description: msg,
-        });
-      }
-    }
-  };
-
-  const handleSendReminder = (invoice: Invoice) => {
-    const clientDisplay =
-      invoice.clientName ??
-      clients.find((c) => c.id === invoice.clientId)?.name ??
-      `${clients.find((c) => c.id === invoice.clientId)?.firstName ?? ""} ${clients.find((c) => c.id === invoice.clientId)?.lastName ?? ""}`.trim();
-
-    toast({
-      title: "Reminder Sent",
-      description: `A payment reminder was sent for invoice ${invoice.id.substring(0, 8)}... to ${clientDisplay}.`,
-    });
-  };
 
   const columns: ColumnDef<Invoice>[] = [
     {
@@ -207,16 +269,6 @@ export function InvoiceDataTable({ data, clients, cases: files }: { data: Invoic
       accessorKey: "invoiceDate",
       header: "Invoice Date",
       cell: ({ row }) => fmtDate(row.getValue("invoiceDate") as string | undefined),
-    },
-    {
-      id: "vendor",
-      header: "Vendor",
-      cell: ({ row }) => <div>{row.original.vendor ?? "-"}</div>,
-    },
-    {
-      id: "purchaser",
-      header: "Purchaser",
-      cell: ({ row }) => <div>{row.original.purchaser ?? row.original.clientName ?? "-"}</div>,
     },
     {
       id: "client",
@@ -233,22 +285,18 @@ export function InvoiceDataTable({ data, clients, cases: files }: { data: Invoic
     },
     {
       accessorKey: "amount",
-      header: () => <div className="text-right">Amount</div>,
-      cell: ({ row }) => {
-        const inv = row.original;
-        const amount = computeAmount(inv);
-        return <div className="text-right font-medium">{currency(amount)}</div>;
-      },
+      header: () => <div className="text-right">Total</div>,
+      cell: ({ row }) => <div className="text-right font-medium">{currency(row.original.amount)}</div>,
+    },
+    {
+      accessorKey: "balance",
+      header: () => <div className="text-right">Balance Due</div>,
+      cell: ({ row }) => <div className="text-right font-medium">{currency(row.original.balance ?? row.original.amount)}</div>,
     },
     {
       accessorKey: "paymentStatus",
       header: "Status",
       cell: ({ row }) => <Badge variant={getStatusVariant(row.getValue("paymentStatus") as any)}>{row.getValue("paymentStatus") ?? "Unpaid"}</Badge>,
-    },
-    {
-      accessorKey: "dueDate",
-      header: "Due Date",
-      cell: ({ row }) => (row.getValue("dueDate") ? fmtDate(row.getValue("dueDate") as string) : "-"),
     },
     {
       id: "actions",
@@ -267,13 +315,8 @@ export function InvoiceDataTable({ data, clients, cases: files }: { data: Invoic
               <DropdownMenuItem asChild>
                 <Link href={`/dashboard/invoices/${invoice.id}`}>View Invoice</Link>
               </DropdownMenuItem>
-
               {invoice.paymentStatus !== "Paid" && (
-                <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice.id)}>Mark as Paid</DropdownMenuItem>
-              )}
-
-              {invoice.paymentStatus !== "Paid" && (
-                <DropdownMenuItem onClick={() => handleSendReminder(invoice)}>Send Reminder</DropdownMenuItem>
+                <RecordPaymentDialog invoice={invoice} />
               )}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -298,12 +341,9 @@ export function InvoiceDataTable({ data, clients, cases: files }: { data: Invoic
     <div className="w-full">
       <div className="flex items-center py-4 gap-3">
         <Input
-          placeholder="Filter by client or purchaser..."
+          placeholder="Filter by client..."
           value={(table.getColumn("client")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => {
-            const q = event.target.value;
-            table.getColumn("client")?.setFilterValue(q);
-          }}
+          onChange={(event) => table.getColumn("client")?.setFilterValue(event.target.value)}
           className="max-w-sm"
         />
         <GenerateInvoiceForm clients={clients} cases={files} />

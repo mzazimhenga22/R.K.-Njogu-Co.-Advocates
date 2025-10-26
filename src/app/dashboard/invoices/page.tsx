@@ -6,18 +6,7 @@ import { InvoiceDataTable } from "./components/data-table";
 import { collection } from "firebase/firestore";
 import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-export type Invoice = {
-  id: string;
-  clientId: string;
-  clientName?: string;
-  fileId?: string;
-  fileName?: string;
-  invoiceDate: string;
-  dueDate: string;
-  amount: number;
-  paymentStatus: "Paid" | "Unpaid" | "Overdue";
-};
+import { type Invoice } from "@/types/invoice";
 
 type Client = {
     id: string;
@@ -79,5 +68,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    
