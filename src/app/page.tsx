@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -14,27 +15,27 @@ import { Briefcase, Users, FileText, Calendar, Scale, Gavel, Landmark, Building,
 const features = [
   {
     icon: Briefcase,
-    title: 'Comprehensive Case Management',
+    title: 'Comprehensive File Management',
     description:
-      'Track case progress, manage documents, and keep all case-related information in one organized place.',
+      'Track file progress from opening to closing, manage all related documents, and keep every piece of information in one organized, accessible place.',
   },
   {
     icon: Users,
-    title: 'Effortless Client Relations',
+    title: '360-Degree Client View',
     description:
-      'Maintain detailed client records, manage communications, and track all interactions seamlessly.',
+      'Maintain detailed client records and view all their associated files, invoices, appointments, and receipts on a single, unified dashboard.',
   },
   {
     icon: FileText,
     title: 'Automated Billing & Invoicing',
     description:
-      'Generate professional invoices, track payment statuses, and manage receipts with just a few clicks.',
+      'Generate professional, referenced invoices in seconds. Track payment statuses, record partial payments, and issue receipts with just a few clicks.',
   },
   {
     icon: Calendar,
-    title: 'Integrated Scheduling',
+    title: 'Integrated Firm-Wide Scheduling',
     description:
-      'Manage appointments, set reminders, and keep your firm’s schedule organized with an integrated calendar.',
+      'Manage appointments for all advocates and clients, set reminders, and keep your entire firm’s schedule organized with an integrated calendar.',
   },
 ];
 
@@ -104,7 +105,7 @@ export default function Home() {
         <title>R.K. Njogu & Co. Advocates — Modern Legal Practice</title>
         <meta
           name="description"
-          content="R.K. Njogu & Co. Advocates — the operating system for modern law firms. Manage clients, cases, and billing with efficiency."
+          content="R.K. Njogu & Co. Advocates — the operating system for modern law firms. Manage clients, files, and billing with efficiency."
         />
       </Head>
 
@@ -149,7 +150,7 @@ export default function Home() {
               The Operating System for Modern Law Firms
             </h1>
             <p className="max-w-[700px] mx-auto text-lg md:text-xl text-gray-200 leading-relaxed">
-              R.K. Njogu & Co. Advocates provides a comprehensive suite of tools to streamline your firm's operations. Manage clients, cases, billing, and scheduling with unparalleled efficiency.
+              R.K. Njogu & Co. Advocates provides a comprehensive suite of tools to streamline your firm's operations. Manage clients, files, billing, and scheduling with unparalleled efficiency.
             </p>
             <div className="flex justify-center gap-4">
               <Button asChild size="lg">
