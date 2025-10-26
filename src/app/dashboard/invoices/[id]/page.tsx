@@ -291,8 +291,8 @@ export default function InvoiceDetailsPage() {
       ? [{ description: invoice.fileName ?? invoice.description ?? "Professional Fees", amount: invoice.amount, ref: invoice.reference ?? undefined }]
       : sampleItems;
 
-  const totalAmount = computeSubtotal(itemsToRender);
-  const amountPaid = invoice.amountPaid || 0;
+  const totalAmount = invoice.amount ?? computeSubtotal(itemsToRender);
+  const amountPaid = invoice.paymentStatus === 'Paid' ? totalAmount : (invoice.amountPaid || 0);
   const balanceDue = totalAmount - amountPaid;
 
 
