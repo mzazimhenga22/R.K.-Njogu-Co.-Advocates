@@ -16,8 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore } from "@/firebase";
 import { collection, addDoc } from "firebase/firestore";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, Upload } from "lucide-react";
 
 import Tesseract from "tesseract.js";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
@@ -34,6 +33,8 @@ type Props = {
   fileName?: string;
 };
 
+// This is now a self-contained component that can be triggered from anywhere.
+// The trigger is passed in as a child.
 export default function UploadDocumentDialog({ fileId, fileName }: Props) {
   const [open, setOpen] = React.useState(false);
   const [file, setFile] = React.useState<File | null>(null);
@@ -174,7 +175,7 @@ export default function UploadDocumentDialog({ fileId, fileName }: Props) {
         fileType: file.type || null,
         fileSize: file.size || null,
         extractedText: extractedText || null,
-        thumbnailBase64: thumbnailBase64 || null, // small image preview (nullable)
+        thumbnailUrl: thumbnailBase64 || null, // Renamed for clarity
         scannedAt: new Date().toISOString(),
         uploadedToStorage: false, // indicates original file was not uploaded to Storage
       });
@@ -203,9 +204,9 @@ export default function UploadDocumentDialog({ fileId, fileName }: Props) {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setFile(null); setExtractedPreview(null); setProgressText(null);} }}>
       <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          <UploadCloud className="mr-2 h-4 w-4" /> Upload / Scan Document
-        </DropdownMenuItem>
+        <Button size="sm">
+          <Upload className="mr-2 h-4 w-4" /> Upload Document
+        </Button>
       </DialogTrigger>
 
       <DialogContent>
@@ -264,5 +265,4 @@ export default function UploadDocumentDialog({ fileId, fileName }: Props) {
     </Dialog>
   );
 }
-
     

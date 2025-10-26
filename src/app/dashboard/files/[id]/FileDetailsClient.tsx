@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Image as ImageIcon,
   Loader2,
+  Upload,
 } from "lucide-react";
 import {
   collection,
@@ -41,6 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import UploadDocumentDialog from "./upload-document-dialog";
 
 type Props = { id: string };
 
@@ -737,9 +739,12 @@ export default function FileDetailsClient({ id }: Props) {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>File Documents</CardTitle>
-          <CardDescription>Associated documents and files for this file.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>File Documents</CardTitle>
+            <CardDescription>Associated documents and files for this file.</CardDescription>
+          </div>
+          <UploadDocumentDialog fileId={id} fileName={singleFile.fileName} />
         </CardHeader>
         <CardContent>
           {documents && documents.length > 0 ? (
@@ -765,9 +770,11 @@ export default function FileDetailsClient({ id }: Props) {
               </Table>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4 bg-secondary rounded-md">
-              No documents have been added to this file yet.
-            </p>
+            <div className="text-center py-8 bg-secondary rounded-md">
+              <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">No Documents Yet</h3>
+              <p className="mt-1 text-sm text-muted-foreground">Get started by uploading a document to this file.</p>
+            </div>
           )}
         </CardContent>
       </Card>
