@@ -7,9 +7,8 @@
   "main": "electron/main.js",
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
-    "build": "next build && npm run copy-static",
-    "copy-static": "node scripts/copy-static.js",
-    "start": "node server.js",
+    "build": "next build",
+    "start": "next start -p $PORT",
     "electron:dev": "concurrently \"npm:dev\" \"wait-on http://localhost:9002 && electron .\"",
     "electron:build": "npm run build && electron-builder",
     "dist": "npm run electron:build"
@@ -85,15 +84,11 @@
       "output": "dist"
     },
     "files": [
-      ".next/standalone/**",
-      ".next/static/**",
+      ".next/**",
       "electron/**",
       "public/**",
       "package.json",
       "node_modules/.prisma/**"
-    ],
-    "asarUnpack": [
-      ".next/standalone/**"
     ],
     "win": {
       "target": "nsis",
