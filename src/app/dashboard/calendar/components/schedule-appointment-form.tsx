@@ -8,7 +8,7 @@ import * as z from "zod";
 import { format, setHours, setMinutes } from "date-fns";
 import { useFirestore } from "@/firebase";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { collection, serverTimestamp } from "firebase/firestore";
+import { collection, serverTimestamp, addDoc } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -101,8 +101,8 @@ export function ScheduleAppointmentForm({
     }
   }, [selectedDate, form]);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!firestore) return;
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!firestore || !user) return;
 
     const [startHour, startMinute] = values.startTime.split(":").map(Number);
     const [endHour, endMinute] = values.endTime.split(":").map(Number);
@@ -121,30 +121,42 @@ export function ScheduleAppointmentForm({
     }
 
     const appointmentCollection = collection(firestore, "appointments");
-    addDocumentNonBlocking(appointmentCollection, {
+    const docRef = await addDocumentNonBlocking(appointmentCollection, {
         title: values.title,
         description: values.description,
         clientId: values.clientId,
         userId: values.userId,
         startTime: startTime,
         endTime: endTime,
-    }).then(docRef => {
-        // Log activity after successful creation
-        if (docRef) {
-            addDocumentNonBlocking(collection(firestore, "activities"), {
-                type: 'appointment:create',
-                message: `Appointment "${values.title}" scheduled.`,
-                actorId: user?.id,
-                actorName: user?.name,
-                meta: {
-                    appointmentId: docRef.id,
-                    clientId: values.clientId,
-                    userId: values.userId,
-                },
-                timestamp: serverTimestamp(),
+    });
+    
+    // Log activity and send notification
+    if (docRef) {
+        addDoc(collection(firestore, "activities"), {
+            type: 'appointment:create',
+            message: `Appointment "${values.title}" scheduled by ${user.name}.`,
+            actorId: user.id,
+            actorName: user.name,
+            meta: {
+                appointmentId: docRef.id,
+                clientId: values.clientId,
+                userId: values.userId,
+            },
+            timestamp: serverTimestamp(),
+        });
+
+        // Notify the assigned user if it's not the current user
+        if (values.userId !== user.id) {
+            addDoc(collection(firestore, `users/${values.userId}/notifications`), {
+                userId: values.userId,
+                message: `You have a new appointment: "${values.title}"`,
+                link: `/dashboard/calendar`,
+                read: false,
+                createdAt: serverTimestamp(),
             });
         }
-    });
+    }
+
 
     toast({
         title: "Appointment Scheduled",

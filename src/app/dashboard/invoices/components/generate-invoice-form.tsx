@@ -43,6 +43,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle, Trash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 type Client = {
   id: string;
@@ -56,6 +57,7 @@ type Client = {
 type FileData = {
   id: string;
   fileName?: string;
+  assignedPersonnelIds?: string[];
 };
 
 const Money = z.coerce
@@ -94,6 +96,7 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { user } = useAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -152,8 +155,8 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
   };
 
   async function onSubmit(values: FormValues) {
-    if (!firestore) {
-      toast({ variant: "destructive", title: "Error", description: "Database not ready" });
+    if (!firestore || !user) {
+      toast({ variant: "destructive", title: "Error", description: "Database not ready or user not logged in." });
       return;
     }
 
@@ -169,7 +172,7 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
       const invoiceDoc: any = {
         clientId: values.clientId,
         clientName: clientName,
-        clientAddress: values.clientAddress ?? null, // store on invoice as well (useful if client record not updated)
+        clientAddress: values.clientAddress ?? null,
         fileId: values.fileId && values.fileId !== "none" ? values.fileId : null,
         fileName: fileObj?.fileName ?? null,
         amount: subtotal,
@@ -177,7 +180,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
         description: values.description ?? null,
         note: values.note ?? null,
         reference: values.reference ?? null,
-        // new fields
         vendor: values.vendor ?? null,
         purchaser: values.purchaser ?? clientName ?? null,
         invoiceDate: values.invoiceDate ? new Date(values.invoiceDate).toISOString() : new Date().toISOString(),
@@ -186,25 +188,28 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
         feeNoteNo: values.feeNoteNo || null,
         feeSequence: values.feeSequence || null,
         createdAt: serverTimestamp(),
+        createdBy: user.id,
       };
 
-      // create invoice doc
-      await addDoc(collection(firestore, "invoices"), invoiceDoc);
+      const invoiceRef = await addDoc(collection(firestore, "invoices"), invoiceDoc);
 
       // Optionally update client record with address
       if (values.saveAddressToClient && values.clientAddress && values.clientId) {
-        try {
-          const clientRef = doc(firestore, "clients", values.clientId);
-          await updateDoc(clientRef, { address: values.clientAddress });
-        } catch (err) {
-          // Non-fatal — show a toast but don't block invoice creation
-          console.warn("Could not save client address:", err);
-          toast({
-            variant: "default",
-            title: "Address not saved",
-            description: "Failed to save address to client record.",
-          });
-        }
+        await updateDoc(doc(firestore, "clients", values.clientId), { address: values.clientAddress });
+      }
+
+      // Notify the primary lawyer on the associated file
+      if (fileObj?.assignedPersonnelIds && fileObj.assignedPersonnelIds[0]) {
+          const lawyerId = fileObj.assignedPersonnelIds[0];
+          if (lawyerId !== user.id) { // Don't notify self
+              await addDoc(collection(firestore, `users/${lawyerId}/notifications`), {
+                  userId: lawyerId,
+                  message: `An invoice for ${clientName} has been generated for file: ${fileObj.fileName}.`,
+                  link: `/dashboard/invoices/${invoiceRef.id}`,
+                  read: false,
+                  createdAt: serverTimestamp(),
+              });
+          }
       }
 
       toast({
@@ -241,7 +246,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
     }
   }
 
-  // live subtotal for display (keeps UI responsive)
   const watchedValues = form.watch();
   const liveSubtotal = computeSubtotalFromValues(watchedValues as FormValues);
 
@@ -253,7 +257,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
         </Button>
       </DialogTrigger>
 
-      {/* DialogContent updated to be scrollable on smaller screens */}
       <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>Generate New Invoice</DialogTitle>
@@ -261,7 +264,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-2">
-            {/* Client and File */}
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -317,7 +319,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
               />
             </div>
 
-            {/* Dates, Reference, Amount */}
             <div className="grid gap-4 md:grid-cols-3">
               <FormField
                 control={form.control}
@@ -400,7 +401,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
               />
             </div>
 
-            {/* Vendor / Purchaser */}
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -432,7 +432,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
 
             </div>
 
-            {/* Client Address + save option */}
             <div className="grid gap-4 md:grid-cols-1">
               <FormField
                 control={form.control}
@@ -471,7 +470,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
               />
             </div>
 
-            {/* Description & Notes */}
             <FormField
               control={form.control}
               name="description"
@@ -498,7 +496,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
               )}
             />
 
-            {/* Line Items */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm font-medium">Line Items</div>
@@ -602,7 +599,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
               </div>
             </div>
 
-            {/* Footer */}
             <div className="flex items-center justify-end space-x-4 pt-2">
               <div className="text-sm text-muted-foreground">
                 <div>
@@ -615,7 +611,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
                     })}
                   </span>
                 </div>
-                <div className="text-xs">VAT (16%) will be calculated on export.</div>
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={form.formState.isSubmitting}>

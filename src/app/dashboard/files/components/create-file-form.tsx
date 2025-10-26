@@ -94,7 +94,7 @@ export function CreateFileForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!firestore || !clients || !advocates) return;
+    if (!firestore || !clients || !advocates || !user) return;
 
     try {
       const filesCollection = collection(firestore, "files");
@@ -108,21 +108,32 @@ export function CreateFileForm() {
       });
       
       // Log activity
-      try {
-        await addDoc(collection(firestore, "activities"), {
-          type: "file:create",
-          message: `New file "${values.fileName}" was created.`,
-          actorId: user?.id,
-          actorName: user?.name,
-          fileId: fileRef.id,
-          meta: {
-            clientId: values.clientId,
-            assignedLawyerId: values.assignedLawyerId,
-          },
-          timestamp: serverTimestamp(),
-        });
-      } catch (err) {
-        console.warn("Failed to log file creation activity:", err);
+      await addDoc(collection(firestore, "activities"), {
+        type: "file:create",
+        message: `New file "${values.fileName}" was created by ${user.name}.`,
+        actorId: user.id,
+        actorName: user.name,
+        fileId: fileRef.id,
+        meta: {
+          clientId: values.clientId,
+          assignedLawyerId: values.assignedLawyerId,
+        },
+        timestamp: serverTimestamp(),
+      });
+
+      // Send notification to the assigned lawyer
+      const lawyer = advocates.find(a => a.id === values.assignedLawyerId);
+      const client = clients.find(c => c.id === values.clientId);
+      const clientName = client ? (client.name || `${client.firstName} ${client.lastName}`) : 'the client';
+
+      if (lawyer && lawyer.id !== user.id) { // Don't notify user of their own action
+          await addDoc(collection(firestore, `users/${lawyer.id}/notifications`), {
+              userId: lawyer.id,
+              message: `You have been assigned to a new file: "${values.fileName}" for ${clientName}.`,
+              link: `/dashboard/files/${fileRef.id}`,
+              read: false,
+              createdAt: serverTimestamp(),
+          });
       }
 
       toast({

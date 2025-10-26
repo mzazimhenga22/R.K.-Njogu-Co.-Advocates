@@ -13,6 +13,7 @@ import {
   Settings,
   UserSquare,
   Receipt,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/dashboard/clients", icon: Users, label: "Clients", roles: ["admin", "lawyer", "secretary"] },
   { href: "/dashboard/files", icon: Briefcase, label: "Files", roles: ["admin", "lawyer", "secretary"] },
   { href: "/dashboard/calendar", icon: Calendar, label: "Calendar", roles: ["admin", "lawyer", "secretary"] },
+  { href: "/dashboard/notifications", icon: Bell, label: "Notifications", roles: ["admin", "lawyer", "secretary"] },
   { href: "/dashboard/advocates", icon: UserSquare, label: "Advocates", roles: ["admin", "lawyer"] },
   { href: "/dashboard/invoices", icon: FileText, label: "Invoicing", roles: ["admin", "secretary"] },
   { href: "/dashboard/receipts", icon: Receipt, label: "Receipts", roles: ["admin", "secretary"] },
@@ -122,5 +124,3 @@ export function MainNav({ className, isMobile = false }: { className?: string; i
     </aside>
   );
 }
-
-    

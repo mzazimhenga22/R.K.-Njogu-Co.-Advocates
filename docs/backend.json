@@ -293,6 +293,36 @@
         }
       },
       "required": ["type", "message", "timestamp"]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Represents a notification for a specific user.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user this notification is for."
+        },
+        "message": {
+          "type": "string",
+          "description": "The content of the notification message."
+        },
+        "link": {
+          "type": "string",
+          "description": "A URL to navigate to when the notification is clicked."
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Whether the user has read the notification."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The server timestamp when the notification was created."
+        }
+      },
+      "required": ["userId", "message", "read", "createdAt"]
     }
   },
   "auth": {
@@ -390,6 +420,16 @@
             "$ref": "#/backend/entities/Activity"
           },
           "description": "Stores a log of user activities for the dashboard feed."
+        }
+      },
+      {
+        "path": "/users/{userId}/notifications/{notificationId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": {
+            "$ref": "#/backend/entities/Notification"
+          },
+          "description": "Stores notifications for a specific user. This is a subcollection of users."
         }
       }
     ]

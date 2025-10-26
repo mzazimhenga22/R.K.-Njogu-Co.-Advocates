@@ -1,3 +1,4 @@
+
 "use client";
 
 import { UserNav } from "@/components/dashboard/user-nav";
@@ -8,6 +9,7 @@ import { MainNav } from "./main-nav";
 import Link from "next/link";
 import { Logo } from "../logo";
 import { GlobalSearch } from "./global-search";
+import { NotificationBell } from "./notification-bell";
 
 export function DashboardHeader() {
   return (
@@ -29,8 +31,9 @@ export function DashboardHeader() {
         </SheetContent>
       </Sheet>
 
-      <div className="ml-auto flex items-center space-x-4">
+      <div className="ml-auto flex items-center space-x-2">
         <GlobalSearch />
+        <NotificationBell />
         <UserNav />
       </div>
     </header>
