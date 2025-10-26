@@ -68,6 +68,7 @@ type InvoiceData = {
 type ReceiptData = {
     id: string;
     invoiceId: string;
+    clientId: string; // Ensure clientId is part of the type
     amountPaid: number;
     paymentDate: string;
 };
@@ -119,8 +120,14 @@ export default function ClientDetailsClient({ id }: Props) {
   const invoicesQuery = useMemoFirebase(() => (firestore && id ? query(collection(firestore, "invoices"), where("clientId", "==", id)) : null), [firestore, id]);
   const { data: clientInvoices, isLoading: invoicesLoading } = useCollection<InvoiceData>(invoicesQuery);
 
-  const receiptsQuery = useMemoFirebase(() => (firestore && id ? query(collection(firestore, "receipts"), where("clientId", "==", id)) : null), [firestore, id]);
-  const { data: clientReceipts, isLoading: receiptsLoading } = useCollection<ReceiptData>(receiptsQuery);
+  // Fetch ALL receipts, then filter client-side. This avoids needing a specific index.
+  const allReceiptsQuery = useMemoFirebase(() => (firestore ? collection(firestore, "receipts") : null), [firestore]);
+  const { data: allReceipts, isLoading: receiptsLoading } = useCollection<ReceiptData>(allReceiptsQuery);
+
+  const clientReceipts = useMemo(() => {
+    if (!allReceipts || !id) return [];
+    return allReceipts.filter(r => r.clientId === id);
+  }, [allReceipts, id]);
   
   const appointmentsQuery = useMemoFirebase(() => (firestore && id ? query(collection(firestore, "appointments"), where("clientId", "==", id)) : null), [firestore, id]);
   const { data: clientAppointments, isLoading: appointmentsLoading } = useCollection<AppointmentData>(appointmentsQuery);
@@ -194,7 +201,7 @@ export default function ClientDetailsClient({ id }: Props) {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="files">Files ({filesWithDetails.length})</TabsTrigger>
           <TabsTrigger value="invoices">Invoices ({clientInvoices?.length || 0})</TabsTrigger>
-          <TabsTrigger value="receipts">Receipts ({clientReceipts?.length || 0})</TabsTrigger>
+          <TabsTrigger value="receipts">Receipts ({clientReceipts.length})</TabsTrigger>
           <TabsTrigger value="appointments">Appointments ({appointmentsWithDetails?.length || 0})</TabsTrigger>
         </TabsList>
         
@@ -299,3 +306,5 @@ export default function ClientDetailsClient({ id }: Props) {
     </div>
   );
 }
+
+    
