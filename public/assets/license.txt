@@ -1,0 +1,61 @@
+RK Njogu Advocates Desktop Application
+Copyright (c) 2025 RK Njogu Advocates. All rights reserved.
+
+====================================================================
+LICENSE AGREEMENT
+====================================================================
+
+This software ("Application") is developed and owned by RK Njogu Advocates.
+
+By installing, copying, or otherwise using this Application, you agree to be bound by the terms of this license.
+
+--------------------------------------------------------------------
+1. GRANT OF LICENSE
+--------------------------------------------------------------------
+RK Njogu Advocates grants you a limited, non-exclusive, non-transferable license to install and use this Application for internal, lawful purposes.
+
+You may:
+- Install and use the Application on your personal or work computer.
+- Access and use its features for legal, administrative, and business purposes related to RK Njogu Advocates’ operations.
+
+You may NOT:
+- Modify, reverse engineer, decompile, or disassemble any part of this software.
+- Copy, redistribute, or resell the Application or any part of it without written permission.
+- Use the Application for any illegal or unethical purpose.
+
+--------------------------------------------------------------------
+2. INTELLECTUAL PROPERTY
+--------------------------------------------------------------------
+All content, code, logos, and designs included in this Application are the intellectual property of RK Njogu Advocates.  
+Unauthorized use or duplication is strictly prohibited and may result in legal action.
+
+--------------------------------------------------------------------
+3. LIMITATION OF LIABILITY
+--------------------------------------------------------------------
+This Application is provided “AS IS” without any warranties of any kind, express or implied.  
+RK Njogu Advocates shall not be liable for any damages, losses, or issues arising from the use or inability to use this software.
+
+--------------------------------------------------------------------
+4. UPDATES AND MAINTENANCE
+--------------------------------------------------------------------
+RK Njogu Advocates may, at its discretion, release updates, fixes, or improvements to this Application.  
+Users are encouraged to keep the Application up to date for optimal performance and security.
+
+--------------------------------------------------------------------
+5. TERMINATION
+--------------------------------------------------------------------
+This license will automatically terminate if you fail to comply with any term of this Agreement.  
+Upon termination, you must cease using the Application and destroy all copies in your possession.
+
+--------------------------------------------------------------------
+6. GOVERNING LAW
+--------------------------------------------------------------------
+This License shall be governed by and construed in accordance with the laws of Kenya.  
+Any disputes arising under this Agreement shall be subject to the jurisdiction of the courts of Kenya.
+
+====================================================================
+For inquiries or permissions, contact:
+RK Njogu Advocates
+Nairobi, Kenya
+Email: info@rknjoguadvocates.com
+====================================================================

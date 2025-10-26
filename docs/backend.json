@@ -1,0 +1,341 @@
+
+{
+  "entities": {
+    "Client": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Client",
+      "type": "object",
+      "description": "Represents a client of the law firm.",
+      "properties": {
+        "firstName": {
+          "type": "string",
+          "description": "First name of the client."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the client."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the client.",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Phone number of the client."
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the client."
+        }
+      },
+      "required": [
+        "firstName",
+        "lastName"
+      ]
+    },
+    "Case": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Case",
+      "type": "object",
+      "description": "Represents a legal case.",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "description": "Reference to Client. (Relationship: Client 1:N Case)"
+        },
+        "caseName": {
+          "type": "string",
+          "description": "Name or short description of the case."
+        },
+        "caseDescription": {
+          "type": "string",
+          "description": "Detailed description of the case."
+        },
+        "filingDate": {
+          "type": "string",
+          "description": "Date the case was filed.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the case (e.g., Open, Closed, In Progress)."
+        },
+        "assignedPersonnelIds": {
+          "type": "array",
+          "description": "References to User. (Relationship: User N:N Case)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "clientId",
+        "caseName"
+      ]
+    },
+    "Appointment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appointment",
+      "type": "object",
+      "description": "Represents a scheduled appointment or meeting.",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "description": "Reference to Client. (Relationship: Client 1:N Appointment)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Appointment)"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "Start date and time of the appointment.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "End date and time of the appointment.",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description or notes about the appointment."
+        }
+      },
+      "required": [
+        "clientId",
+        "userId",
+        "startTime",
+        "endTime"
+      ]
+    },
+    "Invoice": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Invoice",
+      "type": "object",
+      "description": "Represents an invoice for services rendered.",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "description": "Reference to Client. (Relationship: Client 1:N Invoice)"
+        },
+        "caseId": {
+          "type": "string",
+          "description": "Reference to Case. (Relationship: Case 1:N Invoice)"
+        },
+        "invoiceDate": {
+          "type": "string",
+          "description": "Date the invoice was issued.",
+          "format": "date-time"
+        },
+        "dueDate": {
+          "type": "string",
+          "description": "Date the invoice is due.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Total amount due on the invoice."
+        },
+        "paymentStatus": {
+          "type": "string",
+          "description": "Payment status of the invoice (e.g., Paid, Unpaid, Overdue)."
+        }
+      },
+      "required": [
+        "clientId",
+        "invoiceDate",
+        "amount",
+        "paymentStatus"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the application (lawyer, secretary, etc.).",
+      "properties": {
+        "firstName": {
+          "type": "string",
+          "description": "First name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "Role of the user (e.g., admin, lawyer, secretary)."
+        }
+      },
+      "required": [
+        "firstName",
+        "lastName",
+        "email",
+        "role"
+      ]
+    },
+    "Document": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Document",
+      "type": "object",
+      "description": "Represents a document associated with a case.",
+      "properties": {
+        "caseId": {
+          "type": "string",
+          "description": "Reference to Case. (Relationship: Case 1:N Document)"
+        },
+        "fileName": {
+          "type": "string",
+          "description": "Name of the document file."
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "Date the document was uploaded.",
+          "format": "date-time"
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "URL or path to the document file.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "caseId",
+        "fileName",
+        "uploadDate",
+        "fileUrl"
+      ]
+    },
+    "Receipt": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Receipt",
+      "type": "object",
+      "description": "Represents a receipt for a paid invoice.",
+      "properties": {
+        "invoiceId": {
+          "type": "string",
+          "description": "Reference to Invoice."
+        },
+        "clientId": {
+          "type": "string",
+          "description": "Reference to Client."
+        },
+        "amountPaid": {
+          "type": "number",
+          "description": "The amount paid."
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "Date of the payment.",
+          "format": "date-time"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Method of payment (e.g., Bank Transfer, System Marked)."
+        }
+      },
+      "required": [
+        "invoiceId",
+        "clientId",
+        "amountPaid",
+        "paymentDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password"
+    ],
+    "customClaims": {
+      "role": {
+        "type": "string",
+        "enum": [
+          "admin",
+          "lawyer",
+          "secretary"
+        ]
+      }
+    }
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/clients/{clientId}",
+        "definition": {
+          "entityName": "Client",
+          "schema": {
+            "$ref": "#/backend/entities/Client"
+          },
+          "description": "Stores client information.  Clients are top-level entities."
+        }
+      },
+      {
+        "path": "/cases/{caseId}",
+        "definition": {
+          "entityName": "Case",
+          "schema": {
+            "$ref": "#/backend/entities/Case"
+          },
+          "description": "Stores case information. Includes 'assignedPersonnelIds' which is denormalized to enforce Authorization Independence in subcollections."
+        }
+      },
+      {
+        "path": "/appointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": {
+            "$ref": "#/backend/entities/Appointment"
+          },
+          "description": "Stores appointment information.  Appointments are top-level entities."
+        }
+      },
+      {
+        "path": "/invoices/{invoiceId}",
+        "definition": {
+          "entityName": "Invoice",
+          "schema": {
+            "$ref": "#/backend/entities/Invoice"
+          },
+          "description": "Stores invoice information. Invoices are top-level entities."
+        }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user information. User profiles are private to the user and admins."
+        }
+      },
+      {
+        "path": "/cases/{caseId}/documents/{documentId}",
+        "definition": {
+          "entityName": "Document",
+          "schema": {
+            "$ref": "#/backend/entities/Document"
+          },
+          "description": "Stores documents associated with a case."
+        }
+      },
+      {
+        "path": "/receipts/{receiptId}",
+        "definition": {
+          "entityName": "Receipt",
+          "schema": {
+            "$ref": "#/backend/entities/Receipt"
+          },
+          "description": "Stores receipt information for paid invoices."
+        }
+      }
+    ]
+  }
+}

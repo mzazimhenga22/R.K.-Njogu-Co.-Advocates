@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* === Core Palette (Light) === */
+    --background: 0 0% 96%;
+    --foreground: 222.2 84% 5%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 5%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 5%;
+    --primary: 219 79% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 30% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 30% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 259 30% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 58%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 219 79% 60%;
+    --radius: 0.5rem;
+
+  /* Sidebar (light mode) - distinct warm-slate / office look */
+  --sidebar-bg: 210 12% 96%;                /* very light slate (noticeably different from main background) */
+  --sidebar-foreground: 215 14% 14%;        /* dark slate text for contrast */
+  --sidebar-border: 215 12% 88%;            /* subtle border */
+  --sidebar-hover: 215 12% 92%;             /* hover surface */
+  --sidebar-accent: 205 88% 45%;            /* accent (muted blue-teal for active item) */
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-header: 210 12% 98%;
+}
+
+  /* === DARK MODE === */
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 5%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 5%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 219 79% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 259 25% 65%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 35%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 219 79% 60%;
+
+  /* Sidebar (dark mode) - distinct deep slate-blue */
+  --sidebar-bg: 220 18% 12%;                /* deep slate-blue (different from main dark background) */
+  --sidebar-foreground: 210 20% 94%;        /* light text on dark sidebar */
+  --sidebar-border: 220 14% 18%;
+  --sidebar-hover: 220 16% 14%;
+  --sidebar-accent: 205 65% 40%;            /* deep muted teal/blue for active */
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-header: 220 18% 10%;
+}
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}

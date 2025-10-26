@@ -1,0 +1,67 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Check role from the user's document in the /users collection.
+    // This is the correct way to check roles stored in Firestore.
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && getUserRole() == 'admin';
+    }
+
+    function isAllowedToWrite() {
+      let userRole = getUserRole();
+      return isSignedIn() && (userRole == 'admin' || userRole == 'secretary' || userRole == 'lawyer');
+    }
+
+    // --- Collections ---
+    match /{document=**} {
+      allow read: if isSignedIn();
+    }
+
+    match /clients/{clientId} {
+      allow write: if isAllowedToWrite();
+    }
+
+    match /cases/{caseId} {
+      allow write: if isAllowedToWrite();
+    }
+
+    match /appointments/{appointmentId} {
+      allow write: if isAllowedToWrite();
+    }
+
+    match /invoices/{invoiceId} {
+      allow write: if isAllowedToWrite();
+    }
+    
+    match /receipts/{receiptId} {
+      allow write: if isAllowedToWrite();
+    }
+
+    match /cases/{caseId}/documents/{documentId} {
+       allow write: if isAllowedToWrite();
+    }
+    
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create: if isSignedIn(); // Allow any signed-in user to create their own user document
+      allow update: if isOwner(userId) || isAdmin(); // Allow user to update their own info, or an admin
+      allow delete: if isAdmin(); // Only admins can delete users
+    }
+  }
+}
