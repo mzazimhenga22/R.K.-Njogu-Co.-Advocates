@@ -37,6 +37,8 @@ import {
 import { AddClientForm } from "./add-client-form"
 import { Client } from "../page"
 import Link from "next/link"
+import { EditClientForm } from "./edit-client-form"
+import { DeleteClientDialog } from "./delete-client-dialog"
 
 const columns: ColumnDef<Client>[] = [
   {
@@ -92,8 +94,8 @@ const columns: ColumnDef<Client>[] = [
             <DropdownMenuItem asChild>
                <Link href={`/dashboard/clients/${client.id}`}>View client details</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>Edit client</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Delete client</DropdownMenuItem>
+            <EditClientForm client={client} />
+            <DeleteClientDialog clientId={client.id} clientName={client.name || `${client.firstName} ${client.lastName}`} />
           </DropdownMenuContent>
         </DropdownMenu>
       )
@@ -219,5 +221,3 @@ export function ClientDataTable({ data }: { data: Client[] }) {
     </div>
   )
 }
-
-    

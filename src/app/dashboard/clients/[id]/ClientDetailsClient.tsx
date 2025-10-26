@@ -1,3 +1,4 @@
+
 // app/dashboard/clients/[id]/ClientDetailsClient.tsx
 "use client";
 
@@ -212,7 +213,7 @@ export default function ClientDetailsClient({ id }: Props) {
                         <CardTitle>Associated Files</CardTitle>
                         <CardDescription>All legal matters associated with this client.</CardDescription>
                     </div>
-                    <Button asChild size="sm"><Link href="/dashboard/files/create"><PlusCircle className="mr-2 h-4 w-4" /> Create New File</Link></Button>
+                    <Button asChild size="sm"><Link href={`/dashboard/files/create?clientId=${id}`}><PlusCircle className="mr-2 h-4 w-4" /> Create New File</Link></Button>
                 </CardHeader>
                 <CardContent>
                     {filesWithDetails.length > 0 ? (
@@ -306,5 +307,3 @@ export default function ClientDetailsClient({ id }: Props) {
     </div>
   );
 }
-
-    
