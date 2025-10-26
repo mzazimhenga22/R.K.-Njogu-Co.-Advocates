@@ -34,44 +34,48 @@
         "lastName"
       ]
     },
-    "Case": {
+    "File": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Case",
+      "title": "File",
       "type": "object",
-      "description": "Represents a legal case.",
+      "description": "Represents a legal file, which can be a case, a transaction, or other legal matter.",
       "properties": {
         "clientId": {
           "type": "string",
-          "description": "Reference to Client. (Relationship: Client 1:N Case)"
+          "description": "Reference to Client. (Relationship: Client 1:N File)"
         },
-        "caseName": {
+        "fileName": {
           "type": "string",
-          "description": "Name or short description of the case."
+          "description": "Name or short description of the file."
         },
-        "caseDescription": {
+        "fileDescription": {
           "type": "string",
-          "description": "Detailed description of the case."
+          "description": "Detailed description of the file/matter."
         },
-        "filingDate": {
+        "openingDate": {
           "type": "string",
-          "description": "Date the case was filed.",
+          "description": "Date the file was opened.",
           "format": "date-time"
         },
         "status": {
           "type": "string",
-          "description": "Current status of the case (e.g., Open, Closed, In Progress)."
+          "description": "Current status of the file (e.g., Open, Closed, In Progress)."
         },
         "assignedPersonnelIds": {
           "type": "array",
-          "description": "References to User. (Relationship: User N:N Case)",
+          "description": "References to User. (Relationship: User N:N File)",
           "items": {
             "type": "string"
           }
+        },
+        "fileType": {
+            "type": "string",
+            "description": "The type of legal matter (e.g., 'Litigation', 'Conveyancing', 'Corporate')."
         }
       },
       "required": [
         "clientId",
-        "caseName"
+        "fileName"
       ]
     },
     "Appointment": {
@@ -120,9 +124,9 @@
           "type": "string",
           "description": "Reference to Client. (Relationship: Client 1:N Invoice)"
         },
-        "caseId": {
+        "fileId": {
           "type": "string",
-          "description": "Reference to Case. (Relationship: Case 1:N Invoice)"
+          "description": "Reference to File. (Relationship: File 1:N Invoice)"
         },
         "invoiceDate": {
           "type": "string",
@@ -185,11 +189,11 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Document",
       "type": "object",
-      "description": "Represents a document associated with a case.",
+      "description": "Represents a document associated with a file.",
       "properties": {
-        "caseId": {
+        "fileId": {
           "type": "string",
-          "description": "Reference to Case. (Relationship: Case 1:N Document)"
+          "description": "Reference to File. (Relationship: File 1:N Document)"
         },
         "fileName": {
           "type": "string",
@@ -207,7 +211,7 @@
         }
       },
       "required": [
-        "caseId",
+        "fileId",
         "fileName",
         "uploadDate",
         "fileUrl"
@@ -277,13 +281,13 @@
         }
       },
       {
-        "path": "/cases/{caseId}",
+        "path": "/files/{fileId}",
         "definition": {
-          "entityName": "Case",
+          "entityName": "File",
           "schema": {
-            "$ref": "#/backend/entities/Case"
+            "$ref": "#/backend/entities/File"
           },
-          "description": "Stores case information. Includes 'assignedPersonnelIds' which is denormalized to enforce Authorization Independence in subcollections."
+          "description": "Stores file information. Includes 'assignedPersonnelIds' which is denormalized to enforce Authorization Independence in subcollections."
         }
       },
       {
@@ -317,13 +321,13 @@
         }
       },
       {
-        "path": "/cases/{caseId}/documents/{documentId}",
+        "path": "/files/{fileId}/documents/{documentId}",
         "definition": {
           "entityName": "Document",
           "schema": {
             "$ref": "#/backend/entities/Document"
           },
-          "description": "Stores documents associated with a case."
+          "description": "Stores documents associated with a file."
         }
       },
       {
@@ -339,3 +343,5 @@
     ]
   }
 }
+
+    

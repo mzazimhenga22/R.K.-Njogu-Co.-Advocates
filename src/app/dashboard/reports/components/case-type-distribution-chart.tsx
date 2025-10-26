@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -9,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { type Case } from "../../cases/page";
+import { type File as FileType } from "../../files/page";
 
 const COLORS = [
   "hsl(var(--primary))",
@@ -20,8 +21,8 @@ const COLORS = [
   "hsl(var(--chart-5))",
 ];
 
-type CaseTypeDistributionChartProps = {
-  cases: Case[] | null | undefined;
+type FileTypeDistributionChartProps = {
+  cases: FileType[] | null | undefined; // Prop name kept for compatibility
   /**
    * Maximum number of individual slices to show (top N). Remaining types collapse into "Other".
    * Default: 5 (so chart shows up to 5 slices + "Other" if needed).
@@ -46,20 +47,20 @@ function formatPercent(n: number) {
 }
 
 /**
- * Friendly, easy-to-read Case Type Distribution Chart.
+ * Friendly, easy-to-read File Type Distribution Chart.
  * Shows counts + percentages, groups small categories into "Other", and sorts by size.
  */
 export function CaseTypeDistributionChart({
-  cases,
+  cases: files,
   topN = 5,
   minPercentForIndividual = 2,
-}: CaseTypeDistributionChartProps) {
+}: FileTypeDistributionChartProps) {
   const { data, total } = React.useMemo(() => {
-    if (!cases || cases.length === 0) return { data: [] as ChartDatum[], total: 0 };
+    if (!files || files.length === 0) return { data: [] as ChartDatum[], total: 0 };
 
     // Count occurrences per type
-    const counts = cases.reduce((acc, c) => {
-      const type = (c.caseType && String(c.caseType).trim()) || "General";
+    const counts = files.reduce((acc, f) => {
+      const type = (f.fileType && String(f.fileType).trim()) || "General";
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -99,7 +100,7 @@ export function CaseTypeDistributionChart({
     }));
 
     return { data: chartData, total };
-  }, [cases, topN, minPercentForIndividual]);
+  }, [files, topN, minPercentForIndividual]);
 
   // legend formatter — appends count and percent to each label in the legend
   const legendFormatter = (value: string) => {
@@ -132,7 +133,7 @@ export function CaseTypeDistributionChart({
           </span>
         </div>
         <div style={{ marginTop: 6, color: "hsl(var(--muted))", fontSize: 12 }}>
-          of all cases
+          of all files
         </div>
       </div>
     );
@@ -141,7 +142,7 @@ export function CaseTypeDistributionChart({
   if (!data || data.length === 0) {
     return (
       <div className="h-[350px] flex items-center justify-center text-sm text-muted-foreground">
-        No case types to display yet.
+        No file types to display yet.
       </div>
     );
   }
@@ -174,3 +175,5 @@ export function CaseTypeDistributionChart({
     </ResponsiveContainer>
   );
 }
+
+    

@@ -1,8 +1,9 @@
+
 "use client"
 
 import * as React from "react"
 import { Pie, PieChart, ResponsiveContainer, Cell, Tooltip } from "recharts"
-import { type Case } from "../cases/page";
+import { type File as FileType } from "../files/page";
 
 const statusColors: { [key: string]: string } = {
   "Open": "hsl(var(--primary))",
@@ -11,15 +12,15 @@ const statusColors: { [key: string]: string } = {
   "Closed": "hsl(var(--muted-foreground))",
 };
 
-type CaseStatusChartProps = {
-    cases: Case[];
+type FileStatusChartProps = {
+    cases: FileType[]; // Keep prop name for compatibility, but it contains files
 }
 
-export function CaseStatusChart({ cases }: CaseStatusChartProps) {
-    const caseStatusData = React.useMemo(() => {
-        if (!cases) return [];
-        const statusCounts = cases.reduce((acc, currentCase) => {
-            acc[currentCase.status] = (acc[currentCase.status] || 0) + 1;
+export function CaseStatusChart({ cases: files }: FileStatusChartProps) {
+    const fileStatusData = React.useMemo(() => {
+        if (!files) return [];
+        const statusCounts = files.reduce((acc, currentFile) => {
+            acc[currentFile.status] = (acc[currentFile.status] || 0) + 1;
             return acc;
         }, {} as Record<string, number>);
 
@@ -28,7 +29,7 @@ export function CaseStatusChart({ cases }: CaseStatusChartProps) {
             value: count,
             fill: statusColors[status] || "hsl(var(--primary))",
         }));
-    }, [cases]);
+    }, [files]);
 
   return (
     <ResponsiveContainer width="100%" height={250}>
@@ -38,7 +39,7 @@ export function CaseStatusChart({ cases }: CaseStatusChartProps) {
             contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))'}}
         />
         <Pie
-          data={caseStatusData}
+          data={fileStatusData}
           dataKey="value"
           nameKey="status"
           cx="50%"
@@ -76,7 +77,7 @@ export function CaseStatusChart({ cases }: CaseStatusChartProps) {
           }}
           labelLine={false}
         >
-          {caseStatusData.map((entry, index) => (
+          {fileStatusData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.fill} />
           ))}
         </Pie>
@@ -84,3 +85,5 @@ export function CaseStatusChart({ cases }: CaseStatusChartProps) {
     </ResponsiveContainer>
   )
 }
+
+    

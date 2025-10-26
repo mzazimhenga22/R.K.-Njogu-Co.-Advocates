@@ -5,10 +5,10 @@ export type Client = {
   email: string;
   phone: string;
   address: string;
-  caseCount: number;
+  fileCount: number;
 };
 
-export type Case = {
+export type File = {
   id: string;
   title: string;
   clientName: string;
@@ -54,19 +54,19 @@ export type Receipt = {
 }
 
 export let clients: Client[] = [
-  { id: "CLI-001", name: "John Doe", email: "john.doe@example.com", phone: "555-0101", address: "123 Main St, Anytown", caseCount: 2 },
-  { id: "CLI-002", name: "Jane Smith", email: "jane.smith@example.com", phone: "555-0102", address: "456 Oak Ave, Anytown", caseCount: 1 },
-  { id: "CLI-003", name: "Peter Jones", email: "peter.jones@example.com", phone: "555-0103", address: "789 Pine Ln, Anytown", caseCount: 3 },
-  { id: "CLI-004", name: "Mary Johnson", email: "mary.j@example.com", phone: "555-0104", address: "101 Maple Dr, Anytown", caseCount: 0 },
-  { id: "CLI-005", name: "David Williams", email: "david.w@example.com", phone: "555-0105", address: "212 Birch Rd, Anytown", caseCount: 1 },
+  { id: "CLI-001", name: "John Doe", email: "john.doe@example.com", phone: "555-0101", address: "123 Main St, Anytown", fileCount: 2 },
+  { id: "CLI-002", name: "Jane Smith", email: "jane.smith@example.com", phone: "555-0102", address: "456 Oak Ave, Anytown", fileCount: 1 },
+  { id: "CLI-003", name: "Peter Jones", email: "peter.jones@example.com", phone: "555-0103", address: "789 Pine Ln, Anytown", fileCount: 3 },
+  { id: "CLI-004", name: "Mary Johnson", email: "mary.j@example.com", phone: "555-0104", address: "101 Maple Dr, Anytown", fileCount: 0 },
+  { id: "CLI-005", name: "David Williams", email: "david.w@example.com", phone: "555-0105", address: "212 Birch Rd, Anytown", fileCount: 1 },
 ];
 
-export const cases: Case[] = [
-  { id: "CASE-001", title: "Corporate Restructuring", clientName: "John Doe", clientId: "CLI-001", assignedLawyer: "R.k Njogu", status: "In Progress", lastActivity: "2 days ago" },
-  { id: "CASE-002", title: "Intellectual Property", clientName: "Jane Smith", clientId: "CLI-002", assignedLawyer: "Associate A", status: "Open", lastActivity: "5 hours ago" },
-  { id: "CASE-003", title: "Litigation Dispute", clientName: "Peter Jones", clientId: "CLI-003", assignedLawyer: "R.k Njogu", status: "Closed", lastActivity: "1 month ago" },
-  { id: "CASE-004", title: "Real Estate Transaction", clientName: "John Doe", clientId: "CLI-001", assignedLawyer: "Associate B", status: "On Hold", lastActivity: "1 week ago" },
-  { id: "CASE-005", title: "Mergers and Acquisitions", clientName: "David Williams", clientId: "CLI-005", assignedLawyer: "R.k Njogu", status: "In Progress", lastActivity: "yesterday" },
+export const files: File[] = [
+  { id: "FILE-001", title: "Corporate Restructuring", clientName: "John Doe", clientId: "CLI-001", assignedLawyer: "R.k Njogu", status: "In Progress", lastActivity: "2 days ago" },
+  { id: "FILE-002", title: "Intellectual Property", clientName: "Jane Smith", clientId: "CLI-002", assignedLawyer: "Associate A", status: "Open", lastActivity: "5 hours ago" },
+  { id: "FILE-003", title: "Litigation Dispute", clientName: "Peter Jones", clientId: "CLI-003", assignedLawyer: "R.k Njogu", status: "Closed", lastActivity: "1 month ago" },
+  { id: "FILE-004", title: "Real Estate Transaction", clientName: "John Doe", clientId: "CLI-001", assignedLawyer: "Associate B", status: "On Hold", lastActivity: "1 week ago" },
+  { id: "FILE-005", title: "Mergers and Acquisitions", clientName: "David Williams", clientId: "CLI-005", assignedLawyer: "R.k Njogu", status: "In Progress", lastActivity: "yesterday" },
 ];
 
 export let appointments: Appointment[] = [];
@@ -74,9 +74,9 @@ export let appointments: Appointment[] = [];
 
 export const activities: Activity[] = [
   { id: "ACT-001", description: "created a new invoice INV-004 for John Doe.", user: "Secretary", timestamp: "2 hours ago" },
-  { id: "ACT-002", description: "updated status for case CASE-005 to In Progress.", user: "R.k Njogu", timestamp: "yesterday" },
+  { id: "ACT-002", description: "updated status for file FILE-005 to In Progress.", user: "R.k Njogu", timestamp: "yesterday" },
   { id: "ACT-003", description: "added a new client Mary Johnson.", user: "Secretary", timestamp: "2 days ago" },
-  { id: "ACT-004", description: "uploaded 'Discovery Documents.pdf' to CASE-001.", user: "Associate B", timestamp: "3 days ago" },
+  { id: "ACT-004", description: "uploaded 'Discovery Documents.pdf' to FILE-001.", user: "Associate B", timestamp: "3 days ago" },
 ];
 
 export let receipts: Receipt[] = [
@@ -105,10 +105,12 @@ export const addAppointment = (appointment: Appointment) => {
     appointments.sort((a,b) => a.startTime.getTime() - b.startTime.getTime());
 }
 
-export const addCase = (newCase: Case) => {
-    cases.unshift(newCase);
+export const addFile = (newFile: File) => {
+    files.unshift(newFile);
 }
 
 export const addReceipt = (receipt: Receipt) => {
     receipts.unshift(receipt);
 }
+
+    

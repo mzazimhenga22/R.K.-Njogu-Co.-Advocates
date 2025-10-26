@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -62,9 +63,9 @@ const columns: ColumnDef<Client>[] = [
     accessorFn: row => row.phone || row.phoneNumber,
   },
   {
-    accessorKey: "caseCount",
-    header: "Active Cases",
-    cell: ({ row }) => <div className="text-center">{row.getValue("caseCount") || 0}</div>,
+    accessorKey: "fileCount",
+    header: "Active Files",
+    cell: ({ row }) => <div className="text-center">{row.getValue("fileCount") || 0}</div>,
   },
   {
     id: "actions",
@@ -218,3 +219,5 @@ export function ClientDataTable({ data }: { data: Client[] }) {
     </div>
   )
 }
+
+    

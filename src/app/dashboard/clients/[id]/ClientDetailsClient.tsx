@@ -1,3 +1,4 @@
+
 // app/dashboard/clients/[id]/ClientDetailsClient.tsx
 "use client";
 
@@ -44,12 +45,12 @@ const getStatusVariant = (status: string) => {
   }
 };
 
-type CaseData = {
+type FileData = {
   id: string;
-  caseName: string;
+  fileName: string;
   clientId: string;
   status: "Open" | "In Progress" | "Closed" | "On Hold";
-  filingDate: string;
+  openingDate: string;
   assignedPersonnelIds: string[];
 };
 
@@ -115,13 +116,13 @@ export default function ClientDetailsClient({ id }: Props) {
     };
   }, [firestore, id, clientFromHook]);
 
-  // cases query
-  const casesQuery = useMemo(() => {
+  // files query
+  const filesQuery = useMemo(() => {
     if (!firestore || !id) return null;
-    return query(collection(firestore, "cases"), where("clientId", "==", id));
+    return query(collection(firestore, "files"), where("clientId", "==", id));
   }, [firestore, id]);
-  const { data: clientCases, isLoading: areCasesLoading } =
-    useCollection<CaseData>(casesQuery);
+  const { data: clientFiles, isLoading: areFilesLoading } =
+    useCollection<FileData>(filesQuery);
 
   // users (for assigned personnel lookup)
   const usersQuery = useMemo(
@@ -132,7 +133,7 @@ export default function ClientDetailsClient({ id }: Props) {
     useCollection<UserProfile>(usersQuery);
 
   const isLoading =
-    isClientLoading || areCasesLoading || areUsersLoading || fallbackClient === undefined;
+    isClientLoading || areFilesLoading || areUsersLoading || fallbackClient === undefined;
 
   if (isLoading) {
     return (
@@ -194,13 +195,13 @@ export default function ClientDetailsClient({ id }: Props) {
     );
   }
 
-  // Map cases with assigned lawyer info
-  const casesWithDetails = (clientCases ?? []).map((c) => {
-    const advocate = users?.find((u) => c.assignedPersonnelIds?.includes(u.id));
+  // Map files with assigned lawyer info
+  const filesWithDetails = (clientFiles ?? []).map((f) => {
+    const advocate = users?.find((u) => f.assignedPersonnelIds?.includes(u.id));
     return {
-      ...c,
+      ...f,
       assignedLawyer: advocate ? `${advocate.firstName ?? ""} ${advocate.lastName ?? ""}`.trim() : "Unassigned",
-      lastActivity: c.filingDate ? formatDistanceToNow(new Date(c.filingDate), { addSuffix: true }) : "N/A",
+      lastActivity: f.openingDate ? formatDistanceToNow(new Date(f.openingDate), { addSuffix: true }) : "N/A",
     };
   });
 
@@ -244,41 +245,41 @@ export default function ClientDetailsClient({ id }: Props) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Associated Cases</CardTitle>
-            <CardDescription>This client has {casesWithDetails.length} associated case(s).</CardDescription>
+            <CardTitle>Associated Files</CardTitle>
+            <CardDescription>This client has {filesWithDetails.length} associated file(s).</CardDescription>
           </div>
           <Button asChild size="sm">
-            <Link href="/dashboard/cases">
+            <Link href="/dashboard/files">
               <PlusCircle className="mr-2 h-4 w-4" />
-              Create New Case
+              Create New File
             </Link>
           </Button>
         </CardHeader>
         <CardContent>
-          {casesWithDetails.length > 0 ? (
+          {filesWithDetails.length > 0 ? (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Case Title</TableHead>
+                    <TableHead>File Title</TableHead>
                     <TableHead>Assigned To</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Last Activity</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {casesWithDetails.map((c) => (
-                    <TableRow key={c.id}>
+                  {filesWithDetails.map((f) => (
+                    <TableRow key={f.id}>
                       <TableCell className="font-medium">
-                        <Link href={`/dashboard/cases/${encodeURIComponent(c.id)}`} className="hover:underline">
-                          {c.caseName}
+                        <Link href={`/dashboard/files/${encodeURIComponent(f.id)}`} className="hover:underline">
+                          {f.fileName}
                         </Link>
                       </TableCell>
-                      <TableCell>{c.assignedLawyer}</TableCell>
+                      <TableCell>{f.assignedLawyer}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusVariant(c.status)}>{c.status}</Badge>
+                        <Badge variant={getStatusVariant(f.status)}>{f.status}</Badge>
                       </TableCell>
-                      <TableCell>{c.lastActivity}</TableCell>
+                      <TableCell>{f.lastActivity}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -286,7 +287,7 @@ export default function ClientDetailsClient({ id }: Props) {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-4 bg-secondary rounded-md">
-              No cases found for this client.
+              No files found for this client.
             </p>
           )}
         </CardContent>
@@ -294,3 +295,5 @@ export default function ClientDetailsClient({ id }: Props) {
     </div>
   );
 }
+
+    

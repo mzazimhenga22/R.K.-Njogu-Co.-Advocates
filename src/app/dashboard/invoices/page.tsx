@@ -11,8 +11,8 @@ export type Invoice = {
   id: string;
   clientId: string;
   clientName?: string;
-  caseId?: string;
-  caseName?: string;
+  fileId?: string;
+  fileName?: string;
   invoiceDate: string;
   dueDate: string;
   amount: number;
@@ -26,9 +26,9 @@ type Client = {
     lastName?: string;
 }
 
-type Case = {
+type FileData = {
     id: string;
-    caseName: string;
+    fileName: string;
 }
 
 export default function InvoicePage() {
@@ -40,23 +40,23 @@ export default function InvoicePage() {
   const clientsQuery = useMemo(() => (firestore ? collection(firestore, "clients") : null), [firestore]);
   const { data: clients, isLoading: clientsLoading } = useCollection<Client>(clientsQuery);
   
-  const casesQuery = useMemo(() => (firestore ? collection(firestore, "cases") : null), [firestore]);
-  const { data: cases, isLoading: casesLoading } = useCollection<Case>(casesQuery);
+  const filesQuery = useMemo(() => (firestore ? collection(firestore, "files") : null), [firestore]);
+  const { data: files, isLoading: filesLoading } = useCollection<FileData>(filesQuery);
 
   const enrichedInvoices = useMemo(() => {
-    if (!invoices || !clients || !cases) return [];
+    if (!invoices || !clients || !files) return [];
     return invoices.map(inv => {
       const client = clients.find(c => c.id === inv.clientId);
-      const caseData = cases.find(c => c.id === inv.caseId);
+      const fileData = files.find(f => f.id === inv.fileId);
       return {
         ...inv,
         clientName: client ? (client.name || `${client.firstName} ${client.lastName}`) : 'Unknown Client',
-        caseName: caseData ? caseData.caseName : 'N/A'
+        fileName: fileData ? fileData.fileName : 'N/A'
       }
     });
-  }, [invoices, clients, cases]);
+  }, [invoices, clients, files]);
 
-  const isLoading = invoicesLoading || clientsLoading || casesLoading;
+  const isLoading = invoicesLoading || clientsLoading || filesLoading;
 
   if (isLoading) {
      return (
@@ -75,7 +75,9 @@ export default function InvoicePage() {
   return (
     <div>
       <h1 className="text-3xl font-bold font-headline mb-6">Automated Invoicing</h1>
-      <InvoiceDataTable data={enrichedInvoices || []} clients={clients || []} cases={cases || []} />
+      <InvoiceDataTable data={enrichedInvoices || []} clients={clients || []} cases={files || []} />
     </div>
   );
 }
+
+    

@@ -1,3 +1,4 @@
+
 // src/app/dashboard/page.tsx
 "use client";
 
@@ -31,7 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { type Invoice } from "./invoices/page";
 import { type Client } from "./clients/page";
-import { type Case } from "./cases/page";
+import { type File as FileType } from "./files/page";
 import { type Appointment } from "./calendar/page";
 
 // Import the Activity type that RecentActivity expects
@@ -47,7 +48,7 @@ type ActivityDoc = {
   description?: string | null;
   actorId?: string | null;
   actorName?: string | null;
-  caseId?: string | null;
+  fileId?: string | null;
   meta?: Record<string, any> | null;
   timestamp?: any; // Firestore Timestamp | ISO string | number
 };
@@ -78,8 +79,8 @@ export default function DashboardPage() {
     useMemoFirebase(() => (firestore ? collection(firestore, "clients") : null), [firestore])
   );
 
-  const { data: cases, isLoading: casesLoading } = useCollection<Case>(
-    useMemoFirebase(() => (firestore ? collection(firestore, "cases") : null), [firestore])
+  const { data: files, isLoading: filesLoading } = useCollection<FileType>(
+    useMemoFirebase(() => (firestore ? collection(firestore, "files") : null), [firestore])
   );
 
   const { data: appointments, isLoading: appointmentsLoading } = useCollection<Appointment>(
@@ -97,7 +98,7 @@ export default function DashboardPage() {
   const { data: activitiesDocs, isLoading: activitiesLoading } = useCollection<ActivityDoc>(activitiesQuery);
 
   const isLoading =
-    invoicesLoading || clientsLoading || casesLoading || appointmentsLoading || activitiesLoading;
+    invoicesLoading || clientsLoading || filesLoading || appointmentsLoading || activitiesLoading;
 
   const totalRevenue = React.useMemo(() => {
     return invoices?.filter((i) => i.paymentStatus === "Paid").reduce((acc, i) => acc + i.amount, 0);
@@ -127,16 +128,16 @@ export default function DashboardPage() {
       .slice(0, 5);
   }, [appointments]);
 
-  const recentCases = React.useMemo(() => {
-    if (!cases) return [];
-    return [...cases]
+  const recentFiles = React.useMemo(() => {
+    if (!files) return [];
+    return [...files]
       .sort((a, b) => {
-        const aT = new Date(a.filingDate ?? "").getTime() || 0;
-        const bT = new Date(b.filingDate ?? "").getTime() || 0;
+        const aT = new Date(a.openingDate ?? "").getTime() || 0;
+        const bT = new Date(b.openingDate ?? "").getTime() || 0;
         return bT - aT;
       })
       .slice(0, 5);
-  }, [cases]);
+  }, [files]);
 
   // Build an array shaped exactly like the placeholder Activity type expects.
   // We guarantee `description` is a string and `user` is a string (fallbacks).
@@ -171,7 +172,7 @@ export default function DashboardPage() {
       const message = doc.message ?? (doc.type ? doc.type : "Activity");
       const description = (doc.description ?? (typeof doc.message === "string" ? doc.message : "") ) as string;
       const user = doc.actorName ?? "System"; // RecentActivity expects a user string
-      const caseId = doc.caseId ?? null;
+      const fileId = doc.fileId ?? null;
       const meta = doc.meta ?? null;
       const timestamp = date;
       const prettyTime = date ? format(date, "PPpp") : "Unknown";
@@ -183,7 +184,7 @@ export default function DashboardPage() {
         message,
         description,
         user,
-        caseId,
+        caseId: fileId, // Keep caseId for compatibility with RecentActivity if needed, but points to fileId
         meta,
         timestamp,
         prettyTime,
@@ -237,14 +238,14 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Cases</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Files</CardTitle>
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {cases?.filter((c) => c.status === "In Progress" || c.status === "Open").length || 0}
+              {files?.filter((f) => f.status === "In Progress" || f.status === "Open").length || 0}
             </div>
-            <p className="text-xs text-muted-foreground">out of {cases?.length || 0} total cases</p>
+            <p className="text-xs text-muted-foreground">out of {files?.length || 0} total files</p>
           </CardContent>
         </Card>
 
@@ -263,7 +264,7 @@ export default function DashboardPage() {
       <Tabs defaultValue="activity">
         <TabsList>
           <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="case-insights">Case Insights</TabsTrigger>
+          <TabsTrigger value="file-insights">File Insights</TabsTrigger>
         </TabsList>
 
         <TabsContent value="activity" className="space-y-4">
@@ -326,29 +327,29 @@ export default function DashboardPage() {
 
               <Card className="mt-4">
                 <CardHeader>
-                  <CardTitle>Recent Cases</CardTitle>
-                  <CardDescription>Five most recently filed cases</CardDescription>
+                  <CardTitle>Recent Files</CardTitle>
+                  <CardDescription>Five most recently opened files</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Case Title</TableHead>
+                        <TableHead>File Title</TableHead>
                         <TableHead>Client</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {recentCases.map((c) => (
-                        <TableRow key={c.id}>
+                      {recentFiles.map((f) => (
+                        <TableRow key={f.id}>
                           <TableCell className="font-medium">
-                            <Link href={`/dashboard/cases/${c.id}`} className="hover:underline">
-                              {c.caseName}
+                            <Link href={`/dashboard/files/${f.id}`} className="hover:underline">
+                              {f.fileName}
                             </Link>
                           </TableCell>
-                          <TableCell>{(c as any).clientName}</TableCell>
+                          <TableCell>{(f as any).clientName}</TableCell>
                           <TableCell>
-                            <Badge variant={getStatusVariant(c.status)}>{c.status}</Badge>
+                            <Badge variant={getStatusVariant(f.status)}>{f.status}</Badge>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -360,33 +361,33 @@ export default function DashboardPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="case-insights" className="space-y-4">
+        <TabsContent value="file-insights" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="lg:col-span-4">
               <CardHeader>
-                <CardTitle>Recent Cases</CardTitle>
-                <CardDescription>A list of the 5 most recently filed cases.</CardDescription>
+                <CardTitle>Recent Files</CardTitle>
+                <CardDescription>A list of the 5 most recently opened files.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Case Title</TableHead>
+                      <TableHead>File Title</TableHead>
                       <TableHead>Client</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {recentCases.map((c) => (
-                      <TableRow key={c.id}>
+                    {recentFiles.map((f) => (
+                      <TableRow key={f.id}>
                         <TableCell className="font-medium">
-                          <Link href={`/dashboard/cases/${c.id}`} className="hover:underline">
-                            {c.caseName}
+                          <Link href={`/dashboard/files/${f.id}`} className="hover:underline">
+                            {f.fileName}
                           </Link>
                         </TableCell>
-                        <TableCell>{(c as any).clientName}</TableCell>
+                        <TableCell>{(f as any).clientName}</TableCell>
                         <TableCell>
-                          <Badge variant={getStatusVariant(c.status)}>{c.status}</Badge>
+                          <Badge variant={getStatusVariant(f.status)}>{f.status}</Badge>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -397,11 +398,11 @@ export default function DashboardPage() {
 
             <Card className="lg:col-span-3">
               <CardHeader>
-                <CardTitle>Case Status Distribution</CardTitle>
-                <CardDescription>A visual breakdown of current case statuses.</CardDescription>
+                <CardTitle>File Status Distribution</CardTitle>
+                <CardDescription>A visual breakdown of current file statuses.</CardDescription>
               </CardHeader>
               <CardContent>
-                <CaseStatusChart cases={cases || []} />
+                <CaseStatusChart cases={files || []} />
               </CardContent>
             </Card>
           </div>
@@ -410,3 +411,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

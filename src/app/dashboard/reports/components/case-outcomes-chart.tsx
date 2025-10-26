@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -58,9 +59,9 @@ export function CaseOutcomesChart() {
       }
 
       try {
-        // Only fetch closed cases to compute outcomes
-        const casesRef = collection(firestore, "cases");
-        const closedQ = query(casesRef, where("status", "==", "Closed"));
+        // Only fetch closed files to compute outcomes
+        const filesRef = collection(firestore, "files");
+        const closedQ = query(filesRef, where("status", "==", "Closed"));
         const snaps = await getDocs(closedQ);
 
         const counts = new Map<string, number>();
@@ -88,7 +89,7 @@ export function CaseOutcomesChart() {
         setLoading(false);
       } catch (err: any) {
         if (cancelled) return;
-        console.error("Failed to load case outcomes", err);
+        console.error("Failed to load file outcomes", err);
         setError(err?.message ? String(err.message) : "Failed to load outcomes");
         setLoading(false);
       }
@@ -104,7 +105,7 @@ export function CaseOutcomesChart() {
   if (loading) {
     return (
       <div className="h-[350px] flex items-center justify-center">
-        <div className="text-sm text-muted-foreground">Loading case outcomes…</div>
+        <div className="text-sm text-muted-foreground">Loading file outcomes…</div>
       </div>
     );
   }
@@ -121,7 +122,7 @@ export function CaseOutcomesChart() {
     return (
       <div className="h-[350px] flex items-center justify-center">
         <div className="text-sm text-muted-foreground">
-          No closed cases found yet — outcomes will appear here once cases are closed.
+          No closed files found yet — outcomes will appear here once files are closed.
         </div>
       </div>
     );
@@ -182,3 +183,5 @@ export function CaseOutcomesChart() {
     </ResponsiveContainer>
   );
 }
+
+    

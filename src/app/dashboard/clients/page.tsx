@@ -16,11 +16,11 @@ export type Client = {
   phone: string;
   phoneNumber?: string;
   address: string;
-  caseCount: number;
+  fileCount: number;
   createdAt?: string; // Made optional
 };
 
-type CaseData = {
+type FileData = {
   id: string;
   clientId: string;
 };
@@ -33,27 +33,27 @@ export default function ClientPage() {
     [firestore]
   );
   const { data: clientsFromDB, isLoading: clientsLoading } =
-    useCollection<Omit<Client, "caseCount">>(clientsQuery);
+    useCollection<Omit<Client, "fileCount">>(clientsQuery);
 
-  const casesQuery = useMemo(
-    () => (firestore ? collection(firestore, "cases") : null),
+  const filesQuery = useMemo(
+    () => (firestore ? collection(firestore, "files") : null),
     [firestore]
   );
-  const { data: cases, isLoading: casesLoading } =
-    useCollection<CaseData>(casesQuery);
+  const { data: files, isLoading: filesLoading } =
+    useCollection<FileData>(filesQuery);
 
-  const clientsWithCaseCount = useMemo(() => {
-    if (!clientsFromDB || !cases) return [];
+  const clientsWithFileCount = useMemo(() => {
+    if (!clientsFromDB || !files) return [];
     return clientsFromDB.map((client) => {
-      const count = cases.filter((c) => c.clientId === client.id).length;
+      const count = files.filter((f) => f.clientId === client.id).length;
       return {
         ...client,
-        caseCount: count,
+        fileCount: count,
       };
     });
-  }, [clientsFromDB, cases]);
+  }, [clientsFromDB, files]);
 
-  const isLoading = clientsLoading || casesLoading;
+  const isLoading = clientsLoading || filesLoading;
 
   if (isLoading) {
     return (
@@ -76,7 +76,9 @@ export default function ClientPage() {
       <h1 className="text-3xl font-bold font-headline mb-6">
         Client Management
       </h1>
-      <ClientDataTable data={clientsWithCaseCount || []} />
+      <ClientDataTable data={clientsWithFileCount || []} />
     </div>
   );
 }
+
+    

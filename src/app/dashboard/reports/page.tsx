@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -21,7 +22,7 @@ import { InvoiceStatusChart } from "./components/invoice-status-chart";
 import { CaseTypeDistributionChart } from "./components/case-type-distribution-chart";
 import { CaseOutcomesChart } from "./components/case-outcomes-chart";
 
-import type { Case } from "../cases/page";
+import type { File as FileType } from "../files/page";
 import type { Client } from "../clients/page";
 import type { Invoice } from "../invoices/page";
 
@@ -44,8 +45,8 @@ export default function ReportsPage() {
   }, [firestore, currentUser]);
 
   const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
-  const { data: cases, isLoading: casesLoading } = useCollection<Case>(
-    useMemoFirebase(() => (firestore ? collection(firestore, "cases") : null), [firestore])
+  const { data: files, isLoading: filesLoading } = useCollection<FileType>(
+    useMemoFirebase(() => (firestore ? collection(firestore, "files") : null), [firestore])
   );
   const { data: clients, isLoading: clientsLoading } = useCollection<Client>(
     useMemoFirebase(() => (firestore ? collection(firestore, "clients") : null), [firestore])
@@ -56,7 +57,7 @@ export default function ReportsPage() {
 
   const isLoading =
     authLoading ||
-    casesLoading ||
+    filesLoading ||
     clientsLoading ||
     (currentUser?.role === "admin" && usersLoading) ||
     invoicesLoading;
@@ -98,7 +99,7 @@ export default function ReportsPage() {
 
   // ---- Derived Insights ----
   const totalClients = clients?.length || 0;
-  const totalCases = cases?.length || 0;
+  const totalFiles = files?.length || 0;
   const totalInvoices = invoices?.length || 0;
   const totalAdvocates = advocates?.length || 0;
 
@@ -124,8 +125,8 @@ export default function ReportsPage() {
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
-            <h3 className="text-2xl font-semibold">{totalCases}</h3>
-            <p className="text-sm text-muted-foreground">Open Cases</p>
+            <h3 className="text-2xl font-semibold">{totalFiles}</h3>
+            <p className="text-sm text-muted-foreground">Open Files</p>
           </CardContent>
         </Card>
         <Card>
@@ -179,28 +180,28 @@ export default function ReportsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Advocate Workload</CardTitle>
-              <CardDescription>Active cases assigned per advocate.</CardDescription>
+              <CardDescription>Active files assigned per advocate.</CardDescription>
             </CardHeader>
             <CardContent>
-              <AdvocateWorkloadChart cases={cases || []} advocates={advocates} />
+              <AdvocateWorkloadChart cases={files || []} advocates={advocates} />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Case Type Distribution</CardTitle>
-              <CardDescription>Breakdown of cases by type or category.</CardDescription>
+              <CardTitle>File Type Distribution</CardTitle>
+              <CardDescription>Breakdown of files by type or category.</CardDescription>
             </CardHeader>
             <CardContent>
-              <CaseTypeDistributionChart cases={cases || []} />
+              <CaseTypeDistributionChart cases={files || []} />
             </CardContent>
           </Card>
         </div>
       </section>
 
-      {/* Client & Case Insights */}
+      {/* Client & File Insights */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Client & Case Insights</h2>
+        <h2 className="text-xl font-semibold">Client & File Insights</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -214,8 +215,8 @@ export default function ReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Case Outcomes</CardTitle>
-              <CardDescription>Closed case outcomes (based on status).</CardDescription>
+              <CardTitle>File Outcomes</CardTitle>
+              <CardDescription>Closed file outcomes (based on status).</CardDescription>
             </CardHeader>
             <CardContent>
               <CaseOutcomesChart />
@@ -226,3 +227,5 @@ export default function ReportsPage() {
     </div>
   );
 }
+
+    

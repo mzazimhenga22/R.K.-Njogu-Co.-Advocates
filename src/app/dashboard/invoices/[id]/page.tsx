@@ -1,3 +1,4 @@
+
 // src/app/dashboard/invoices/[id]/page.tsx
 "use client";
 
@@ -25,8 +26,8 @@ export type Invoice = {
   id: string;
   clientId: string;
   clientName?: string | null;
-  caseId?: string | null;
-  caseName?: string | null;
+  fileId?: string | null;
+  fileName?: string | null;
   amount?: number | null;
   items?: { description: string; ref?: string; amount: number }[];
   invoiceDate?: string;
@@ -302,7 +303,7 @@ export default function InvoiceDetailsPage() {
     Array.isArray(invoice.items) && invoice.items.length > 0
       ? invoice.items
       : invoice.amount
-      ? [{ description: invoice.caseName ?? invoice.description ?? "Professional Fees", amount: invoice.amount, ref: invoice.reference ?? undefined }]
+      ? [{ description: invoice.fileName ?? invoice.description ?? "Professional Fees", amount: invoice.amount, ref: invoice.reference ?? undefined }]
       : sampleItems;
 
   const subtotalAmount = computeSubtotal(itemsToRender);
@@ -324,7 +325,7 @@ export default function InvoiceDetailsPage() {
   const feeNoteNo = deriveFeeNoteNo(invoice, ourRef);
 
   const issuedDate = invoice.invoiceDate ? formatLongDate(invoice.invoiceDate) : "2nd July 2025";
-  const reLine = invoice.caseName ?? invoice.description ?? "SALE & PURCHASE FOR L.R. NO. NAIROBI/BLOCK 126/2673";
+  const reLine = invoice.fileName ?? invoice.description ?? "SALE & PURCHASE FOR L.R. NO. NAIROBI/BLOCK 126/2673";
   const vendor = invoice.note ?? "STANLEY NGUGI MACHARIA";
   const purchaser = clientName;
 
@@ -493,3 +494,5 @@ export default function InvoiceDetailsPage() {
     </div>
   );
 }
+
+    

@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
-import { type Case } from "../../cases/page";
+import { type File as FileType } from "../../files/page";
 
 type UserProfile = {
   id: string;
@@ -12,27 +12,27 @@ type UserProfile = {
 };
 
 type AdvocateWorkloadChartProps = {
-    cases: Case[];
+    cases: FileType[];
     advocates: UserProfile[];
 }
 
-export function AdvocateWorkloadChart({ cases, advocates }: AdvocateWorkloadChartProps) {
+export function AdvocateWorkloadChart({ cases: files, advocates }: AdvocateWorkloadChartProps) {
     const workloadData = React.useMemo(() => {
-        if (!cases || !advocates) return [];
+        if (!files || !advocates) return [];
 
-        const activeCases = cases.filter(c => c.status === "Open" || c.status === "In Progress");
+        const activeFiles = files.filter(f => f.status === "Open" || f.status === "In Progress");
 
         const workload = advocates.map(advocate => {
             const advocateName = `${advocate.firstName} ${advocate.lastName}`;
-            const assignedCaseCount = activeCases.filter(c => c.assignedLawyerId === advocate.id).length;
+            const assignedFileCount = activeFiles.filter(f => f.assignedLawyerId === advocate.id).length;
             return {
                 name: advocateName,
-                "Active Cases": assignedCaseCount,
+                "Active Files": assignedFileCount,
             }
         });
 
         return workload;
-    }, [cases, advocates]);
+    }, [files, advocates]);
 
   return (
     <ResponsiveContainer width="100%" height={350}>
@@ -52,8 +52,10 @@ export function AdvocateWorkloadChart({ cases, advocates }: AdvocateWorkloadChar
             contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))'}}
         />
         <Legend />
-        <Bar dataKey="Active Cases" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="Active Files" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )
 }
+
+    

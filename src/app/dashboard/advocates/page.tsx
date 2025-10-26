@@ -31,9 +31,9 @@ type UserProfile = {
   role?: "admin" | "lawyer" | "secretary";
 };
 
-type CaseData = {
+type FileData = {
   id: string;
-  caseName: string;
+  fileName: string;
   clientId: string;
   status: "Open" | "In Progress" | "Closed" | "On Hold";
   assignedPersonnelIds?: string[];
@@ -77,12 +77,12 @@ export default function AdvocatesPage() {
   const { data: advocates, isLoading: advocatesLoading } =
     useCollection<UserProfile>(advocatesQuery);
 
-  const casesQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, "cases") : null),
+  const filesQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, "files") : null),
     [firestore]
   );
-  const { data: cases, isLoading: casesLoading } =
-    useCollection<CaseData>(casesQuery);
+  const { data: files, isLoading: filesLoading } =
+    useCollection<FileData>(filesQuery);
     
   const clientsQuery = useMemoFirebase(
     () => (firestore ? collection(firestore, "clients") : null),
@@ -91,18 +91,18 @@ export default function AdvocatesPage() {
   const { data: clients, isLoading: clientsLoading } = useCollection<Client>(clientsQuery);
 
 
-  const casesWithClientNames = useMemo(() => {
-    if (!cases || !clients) return [];
-    return cases.map(c => {
-        const client = clients.find(cli => cli.id === c.clientId);
+  const filesWithClientNames = useMemo(() => {
+    if (!files || !clients) return [];
+    return files.map(f => {
+        const client = clients.find(cli => cli.id === f.clientId);
         return {
-            ...c,
+            ...f,
             clientName: client ? (client.name || `${client.firstName} ${client.lastName}`) : 'Unknown Client'
         }
     })
-  }, [cases, clients]);
+  }, [files, clients]);
 
-  const isLoading = advocatesLoading || casesLoading || clientsLoading;
+  const isLoading = advocatesLoading || filesLoading || clientsLoading;
 
   if (isLoading) {
     return (
@@ -137,8 +137,8 @@ export default function AdvocatesPage() {
       <h1 className="text-3xl font-bold font-headline mb-6">Advocates</h1>
       <div className="grid gap-6">
         {advocates?.map((advocate) => {
-          const assignedCases = casesWithClientNames.filter(
-            (c) => c.assignedPersonnelIds && c.assignedPersonnelIds.includes(advocate.id)
+          const assignedFiles = filesWithClientNames.filter(
+            (f) => f.assignedPersonnelIds && f.assignedPersonnelIds.includes(advocate.id)
           );
           const advocateName = `${advocate.firstName} ${advocate.lastName}`;
           const avatarFallback = `${advocate.firstName?.[0] || ''}${advocate.lastName?.[0] || ''}`;
@@ -156,33 +156,33 @@ export default function AdvocatesPage() {
               </CardHeader>
               <CardContent>
                 <h3 className="font-semibold mb-2">
-                  Assigned Cases ({assignedCases.length})
+                  Assigned Files ({assignedFiles.length})
                 </h3>
-                {assignedCases.length > 0 ? (
+                {assignedFiles.length > 0 ? (
                   <div className="rounded-md border">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Case Title</TableHead>
+                          <TableHead>File Title</TableHead>
                           <TableHead>Client</TableHead>
                           <TableHead>Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {assignedCases.map((c) => (
-                          <TableRow key={c.id}>
+                        {assignedFiles.map((f) => (
+                          <TableRow key={f.id}>
                             <TableCell className="font-medium">
                               <Link
-                                href={`/dashboard/cases/${c.id}`}
+                                href={`/dashboard/files/${f.id}`}
                                 className="hover:underline"
                               >
-                                {c.caseName}
+                                {f.fileName}
                               </Link>
                             </TableCell>
-                            <TableCell>{c.clientName}</TableCell>
+                            <TableCell>{f.clientName}</TableCell>
                             <TableCell>
-                              <Badge variant={getStatusVariant(c.status)}>
-                                {c.status}
+                              <Badge variant={getStatusVariant(f.status)}>
+                                {f.status}
                               </Badge>
                             </TableCell>
                           </TableRow>
@@ -192,7 +192,7 @@ export default function AdvocatesPage() {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4 bg-secondary rounded-md">
-                    No cases assigned.
+                    No files assigned.
                   </p>
                 )}
               </CardContent>
@@ -203,3 +203,5 @@ export default function AdvocatesPage() {
     </div>
   );
 }
+
+    

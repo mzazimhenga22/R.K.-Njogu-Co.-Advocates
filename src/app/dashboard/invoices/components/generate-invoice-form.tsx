@@ -53,9 +53,9 @@ type Client = {
   email?: string;
 };
 
-type Case = {
+type FileData = {
   id: string;
-  caseName?: string;
+  fileName?: string;
 };
 
 const Money = z.coerce
@@ -70,7 +70,7 @@ const itemSchema = z.object({
 
 const formSchema = z.object({
   clientId: z.string().min(1, "Please select a client"),
-  caseId: z.string().optional(),
+  fileId: z.string().optional(),
   amount: Money.optional(),
   dueDate: z.string().min(1, "Due date required"),
   reference: z.string().optional(),
@@ -88,7 +88,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function GenerateInvoiceForm({ clients, cases }: { clients: Client[]; cases: Case[] }) {
+export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client[]; cases: FileData[] }) {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -97,7 +97,7 @@ export function GenerateInvoiceForm({ clients, cases }: { clients: Client[]; cas
     resolver: zodResolver(formSchema),
     defaultValues: {
       clientId: "",
-      caseId: "none",
+      fileId: "none",
       amount: undefined,
       dueDate: "",
       reference: "",
@@ -156,7 +156,7 @@ export function GenerateInvoiceForm({ clients, cases }: { clients: Client[]; cas
     try {
       const subtotal = computeSubtotalFromValues(values);
       const clientObj = clients.find((c) => c.id === values.clientId) ?? null;
-      const caseObj = cases.find((c) => c.id === values.caseId) ?? null;
+      const fileObj = files.find((f) => f.id === values.fileId) ?? null;
 
       const clientName =
         clientObj?.name ??
@@ -166,8 +166,8 @@ export function GenerateInvoiceForm({ clients, cases }: { clients: Client[]; cas
         clientId: values.clientId,
         clientName: clientName,
         clientAddress: values.clientAddress ?? null, // store on invoice as well (useful if client record not updated)
-        caseId: values.caseId && values.caseId !== "none" ? values.caseId : null,
-        caseName: caseObj?.caseName ?? null,
+        fileId: values.fileId && values.fileId !== "none" ? values.fileId : null,
+        fileName: fileObj?.fileName ?? null,
         amount: subtotal,
         items: values.items ?? [],
         description: values.description ?? null,
@@ -194,11 +194,10 @@ export function GenerateInvoiceForm({ clients, cases }: { clients: Client[]; cas
           // Non-fatal — show a toast but don't block invoice creation
           console.warn("Could not save client address:", err);
           toast({
-  variant: "default",
-  title: "Address not saved",
-  description: "Failed to save address to client record.",
-});
-
+            variant: "default",
+            title: "Address not saved",
+            description: "Failed to save address to client record.",
+          });
         }
       }
 
@@ -209,7 +208,7 @@ export function GenerateInvoiceForm({ clients, cases }: { clients: Client[]; cas
 
       form.reset({
         clientId: "",
-        caseId: "none",
+        fileId: "none",
         amount: undefined,
         dueDate: "",
         reference: "",
@@ -254,7 +253,7 @@ export function GenerateInvoiceForm({ clients, cases }: { clients: Client[]; cas
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-2">
-            {/* Client and Case */}
+            {/* Client and File */}
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -283,22 +282,22 @@ export function GenerateInvoiceForm({ clients, cases }: { clients: Client[]; cas
 
               <FormField
                 control={form.control}
-                name="caseId"
+                name="fileId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Related Case (optional)</FormLabel>
+                    <FormLabel>Related File (optional)</FormLabel>
                     <FormControl>
                       <Select onValueChange={field.onChange} value={field.value || "none"}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a case" />
+                          <SelectValue placeholder="Select a file" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem key="none" value="none">
                             — None —
                           </SelectItem>
-                          {cases.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.caseName}
+                          {files.map((f) => (
+                            <SelectItem key={f.id} value={f.id}>
+                              {f.fileName}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -585,9 +584,9 @@ export function GenerateInvoiceForm({ clients, cases }: { clients: Client[]; cas
             <div className="flex items-center justify-end space-x-4 pt-2">
               <div className="text-sm text-muted-foreground">
                 <div>
-                  Subtotal: {" "}
+                  Subtotal:{" "}
                   <span className="font-medium">
-                    KSH {" "}
+                    KSH{" "}
                     {liveSubtotal.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -608,3 +607,5 @@ export function GenerateInvoiceForm({ clients, cases }: { clients: Client[]; cas
     </Dialog>
   );
 }
+
+    

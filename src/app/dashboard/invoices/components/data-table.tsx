@@ -1,3 +1,4 @@
+
 // Updated: src/app/dashboard/invoices/components/data-table.tsx
 // - No major structural changes here — kept UI the same.
 // - Import/usage unchanged; GenerateInvoiceForm remains the same component name.
@@ -54,8 +55,8 @@ export type Invoice = {
   id: string;
   clientId: string;
   clientName?: string | null;
-  caseId?: string | null;
-  caseName?: string | null;
+  fileId?: string | null;
+  fileName?: string | null;
   amount?: number | null;
   invoiceDate?: string;
   dueDate?: string;
@@ -76,9 +77,9 @@ type Client = {
   address?: string;
 };
 
-type Case = {
+type FileData = {
   id: string;
-  caseName?: string;
+  fileName?: string;
 };
 
 const getStatusVariant = (status?: Invoice["paymentStatus"]) => {
@@ -99,7 +100,7 @@ const currency = (amount?: number) =>
 
 const fmtDate = (iso?: string | null) => (iso ? new Date(String(iso)).toLocaleDateString() : "-");
 
-export function InvoiceDataTable({ data, clients, cases }: { data: Invoice[]; clients: Client[]; cases: Case[] }) {
+export function InvoiceDataTable({ data, clients, cases: files }: { data: Invoice[]; clients: Client[]; cases: FileData[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const { toast } = useToast();
@@ -227,8 +228,8 @@ export function InvoiceDataTable({ data, clients, cases }: { data: Invoice[]; cl
       },
     },
     {
-      accessorKey: "caseName",
-      header: "Case",
+      accessorKey: "fileName",
+      header: "File",
     },
     {
       accessorKey: "amount",
@@ -305,7 +306,7 @@ export function InvoiceDataTable({ data, clients, cases }: { data: Invoice[]; cl
           }}
           className="max-w-sm"
         />
-        <GenerateInvoiceForm clients={clients} cases={cases} />
+        <GenerateInvoiceForm clients={clients} cases={files} />
       </div>
 
       <div className="rounded-md border bg-card">
@@ -355,3 +356,5 @@ export function InvoiceDataTable({ data, clients, cases }: { data: Invoice[]; cl
     </div>
   );
 }
+
+    

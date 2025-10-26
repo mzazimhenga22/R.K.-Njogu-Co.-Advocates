@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -21,7 +22,7 @@ import { ScrollArea } from "../ui/scroll-area";
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["admin", "lawyer", "secretary"] },
   { href: "/dashboard/clients", icon: Users, label: "Clients", roles: ["admin", "lawyer", "secretary"] },
-  { href: "/dashboard/cases", icon: Briefcase, label: "Cases", roles: ["admin", "lawyer", "secretary"] },
+  { href: "/dashboard/files", icon: Briefcase, label: "Files", roles: ["admin", "lawyer", "secretary"] },
   { href: "/dashboard/calendar", icon: Calendar, label: "Calendar", roles: ["admin", "lawyer", "secretary"] },
   { href: "/dashboard/advocates", icon: UserSquare, label: "Advocates", roles: ["admin", "lawyer"] },
   { href: "/dashboard/invoices", icon: FileText, label: "Invoicing", roles: ["admin", "secretary"] },
@@ -121,3 +122,5 @@ export function MainNav({ className, isMobile = false }: { className?: string; i
     </aside>
   );
 }
+
+    
