@@ -326,8 +326,8 @@ export default function InvoiceDetailsPage() {
 
   const issuedDate = invoice.invoiceDate ? formatLongDate(invoice.invoiceDate) : "2nd July 2025";
   const reLine = invoice.fileName ?? invoice.description ?? "SALE & PURCHASE FOR L.R. NO. NAIROBI/BLOCK 126/2673";
-  const vendor = invoice.note ?? "STANLEY NGUGI MACHARIA";
-  const purchaser = clientName;
+  const vendor = (invoice as any).vendor ?? "STANLEY NGUGI MACHARIA";
+  const purchaser = (invoice as any).purchaser ?? clientName;
 
   const firmNameTop = firm?.name ?? "R. K. NJOGU & CO. ADVOCATES";
   const firmAddressFallback =
@@ -494,5 +494,3 @@ export default function InvoiceDetailsPage() {
     </div>
   );
 }
-
-    

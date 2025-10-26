@@ -84,6 +84,8 @@ const formSchema = z.object({
   paymentStatus: z.enum(["Paid", "Unpaid", "Overdue"]).optional(),
   clientAddress: z.string().optional(),
   saveAddressToClient: z.boolean().optional(),
+  feeNoteNo: z.string().optional(),
+  feeSequence: z.union([z.string(), z.number()]).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -110,6 +112,8 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
       paymentStatus: "Unpaid",
       clientAddress: "",
       saveAddressToClient: false,
+      feeNoteNo: "",
+      feeSequence: "",
     },
   });
 
@@ -179,6 +183,8 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
         invoiceDate: values.invoiceDate ? new Date(values.invoiceDate).toISOString() : new Date().toISOString(),
         dueDate: values.dueDate,
         paymentStatus: (values.paymentStatus as "Paid" | "Unpaid" | "Overdue") ?? "Unpaid",
+        feeNoteNo: values.feeNoteNo || null,
+        feeSequence: values.feeSequence || null,
         createdAt: serverTimestamp(),
       };
 
@@ -221,6 +227,8 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
         paymentStatus: "Unpaid",
         clientAddress: "",
         saveAddressToClient: false,
+        feeNoteNo: "",
+        feeSequence: "",
       });
       setOpen(false);
     } catch (error: any) {
@@ -310,7 +318,7 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
             </div>
 
             {/* Dates, Reference, Amount */}
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-3">
               <FormField
                 control={form.control}
                 name="invoiceDate"
@@ -338,35 +346,24 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
                   </FormItem>
                 )}
               />
-
+              
               <FormField
                 control={form.control}
-                name="reference"
+                name="paymentStatus"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reference</FormLabel>
+                    <FormLabel>Payment Status</FormLabel>
                     <FormControl>
-                      <Input placeholder="Invoice ref" value={field.value || ""} onChange={field.onChange} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Manual Amount (KSH)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="Leave empty if using items"
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                      />
+                      <Select onValueChange={field.onChange} value={field.value || "Unpaid"}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Unpaid">Unpaid</SelectItem>
+                          <SelectItem value="Paid">Paid</SelectItem>
+                          <SelectItem value="Overdue">Overdue</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -374,8 +371,37 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
               />
             </div>
 
-            {/* Vendor / Purchaser / Payment Status */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
+                 <FormField
+                control={form.control}
+                name="reference"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Our Reference</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. RKN-3/NMM-001/25" value={field.value || ""} onChange={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+                 <FormField
+                control={form.control}
+                name="feeNoteNo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fee Note No.</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Overrides auto-generated" value={field.value || ""} onChange={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Vendor / Purchaser */}
+            <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="vendor"
@@ -404,28 +430,6 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="paymentStatus"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payment Status</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || "Unpaid"}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Unpaid">Unpaid</SelectItem>
-                          <SelectItem value="Paid">Paid</SelectItem>
-                          <SelectItem value="Overdue">Overdue</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             {/* Client Address + save option */}
@@ -510,7 +514,25 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
               <div className="space-y-3">
                 {fields.length === 0 && (
                   <div className="text-sm text-muted-foreground">
-                    No items — manual amount will be used.
+                     <FormField
+                        control={form.control}
+                        name="amount"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Total Amount (KSH)</FormLabel>
+                            <FormControl>
+                            <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="Total amount for this invoice"
+                                value={field.value ?? ""}
+                                onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                            />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
                   </div>
                 )}
                 {fields.map((fieldItem, idx) => (
@@ -607,5 +629,3 @@ export function GenerateInvoiceForm({ clients, cases: files }: { clients: Client
     </Dialog>
   );
 }
-
-    

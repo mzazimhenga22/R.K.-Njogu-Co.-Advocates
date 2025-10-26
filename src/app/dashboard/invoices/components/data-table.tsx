@@ -356,5 +356,3 @@ export function InvoiceDataTable({ data, clients, cases: files }: { data: Invoic
     </div>
   );
 }
-
-    
