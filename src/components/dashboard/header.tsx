@@ -7,6 +7,7 @@ import { Menu } from "lucide-react";
 import { MainNav } from "./main-nav";
 import Link from "next/link";
 import { Logo } from "../logo";
+import { GlobalSearch } from "./global-search";
 
 export function DashboardHeader() {
   return (
@@ -29,6 +30,7 @@ export function DashboardHeader() {
       </Sheet>
 
       <div className="ml-auto flex items-center space-x-4">
+        <GlobalSearch />
         <UserNav />
       </div>
     </header>
