@@ -1,4 +1,4 @@
-
+// src/app/page.tsx
 'use client';
 
 import Link from 'next/link';
@@ -8,10 +8,28 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Briefcase, Users, FileText, Calendar, Scale, Gavel, Landmark, Building, MessageCircle } from 'lucide-react';
+import {
+  Briefcase,
+  Users,
+  FileText,
+  Calendar,
+  Scale,
+  Gavel,
+  Landmark,
+  Building,
+} from 'lucide-react';
+import { ConsultationForm } from '@/components/landing/consultation-form';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-// ✅ Feature list
+type UserProfile = {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  role?: "admin" | "lawyer" | "secretary";
+};
+
+// Feature list
 const features = [
   {
     icon: Briefcase,
@@ -39,7 +57,7 @@ const features = [
   },
 ];
 
-// ✅ Showcase items (alternating layout)
+// Showcase items
 const showcase = [
   {
     img: '/assets/law1.webp',
@@ -63,7 +81,7 @@ const showcase = [
   },
 ];
 
-// ✅ Practice areas
+// Practice areas
 const practices = [
   { icon: Scale, title: 'Corporate Law', desc: 'Advising businesses on contracts, compliance, and corporate governance.' },
   { icon: Gavel, title: 'Litigation', desc: 'Representing clients in civil and commercial disputes with strategic precision.' },
@@ -71,7 +89,7 @@ const practices = [
   { icon: Building, title: 'Family & Employment Law', desc: 'Offering compassionate, sound counsel for family and workplace matters.' },
 ];
 
-// ✅ Testimonials
+// Testimonials
 const testimonials = [
   {
     quote:
@@ -97,7 +115,11 @@ export default function Home() {
   const ref = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
   const y1 = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
-  const y2 = useTransform(scrollYProgress, [0, 1], ['0%', '-25%']);
+
+  const firestore = useFirestore();
+  const { data: users } = useCollection<UserProfile>(
+    useMemoFirebase(() => (firestore ? collection(firestore, "users") : null), [firestore])
+  );
 
   return (
     <>
@@ -245,9 +267,7 @@ export default function Home() {
             Schedule a consultation with our team today and experience modern, efficient, and reliable legal service.
           </p>
           <div className="flex justify-center gap-4">
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/contact">Book a Consultation</Link>
-            </Button>
+            <ConsultationForm advocates={users || []} />
             <Button asChild size="lg" variant="outline">
               <Link href="mailto:info@rknjogu.co.ke">Email Us</Link>
             </Button>
